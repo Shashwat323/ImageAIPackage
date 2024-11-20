@@ -11,6 +11,9 @@ class ImageAIPackageTests(unittest.TestCase):
         new_img = imageaipackage.resize("unit_test_images/TestImg1.jpg", True)
         imageaipackage.save_image(new_img, "unit_test_images/CroppedImg1.jpg")
 
+    def test_gray_scale(self):
+        new_img = imageaipackage.gray_scale("unit_test_images/TestImg1.jpg", 1)
+        imageaipackage.save_image(new_img, "unit_test_images/grayScaledImage.jpg")
 
 if __name__ == '__main__':
     unittest.main()
