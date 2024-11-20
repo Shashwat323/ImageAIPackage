@@ -1,8 +1,8 @@
-def resize(image_file_path: str, crop: bool, width: int, height: int) -> str:
-    pass
-
 from PIL import Image
 import os
+import cv2
+import numpy as np
+
 
 def gray_scale(image_file_path: str, mode: int = 1):
     # mode 1 = gray scale 0-255
@@ -15,14 +15,11 @@ def gray_scale(image_file_path: str, mode: int = 1):
         gray_scaled_image = image.quantize(colors=256)
         gray_scaled_image = image.convert("L")
     elif mode == 3:
-        gray_scaled_image =image.convert("1")
+        gray_scaled_image = image.convert("1")
     else:
         print("Error, incorrect mode")
     # return image here. (Return model to be decided)
-import os
 
-import cv2
-import numpy as np
 
 def save_image(img: np.ndarray, output_file_path: str) -> None:
     if img is None:
@@ -33,6 +30,7 @@ def save_image(img: np.ndarray, output_file_path: str) -> None:
 
     # Save the image
     cv2.imwrite(output_file_path, img)
+
 
 def resize(image_file_path: str, crop: bool = False, new_width: int = 224) -> np.ndarray:
     """
@@ -63,5 +61,3 @@ def resize(image_file_path: str, crop: bool = False, new_width: int = 224) -> np
     else:
         new_img = cv2.resize(img, (new_width, new_width))
     return new_img
-
-
