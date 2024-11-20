@@ -4,6 +4,24 @@ def resize(image_file_path: str, crop: bool, width: int, height: int) -> str:
 from PIL import Image
 import os
 
+from PIL import Image
+import random
+import numpy as np
+
+def random_crop(image_file_path: str):
+    image = Image.open(image_file_path)
+    width, height = image.size
+    smallest_edge = width if width < height else height
+    x_min = random.randint(0, width - smallest_edge) if width > smallest_edge else 0
+    y_min = random.randint(0, height - smallest_edge) if height > smallest_edge else 0
+    box = (x_min, y_min, x_min + smallest_edge, y_min + smallest_edge)
+    cropped_image = image.crop(box)
+    #print(x_min) this code is to ensure randint() is working correctly
+    #print(y_min) this code is to ensure randint() is working correctly
+    cropped_image_array = np.array(cropped_image)
+    #cropped_image.show()
+    return cropped_image_array
+
 def gray_scale(image_file_path: str, mode: int = 1): 	# mode base = 1, type casted parameters
     image = Image.open(image_file_path)
     if mode == 1:
