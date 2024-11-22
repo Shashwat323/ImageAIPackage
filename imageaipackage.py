@@ -27,9 +27,6 @@ def save_image(img: np.ndarray, output_file_path: str) -> None:
     if img is None:
         raise ValueError("Cannot save an image that is None.")
 
-    # Ensure the directory exists
-    os.makedirs(os.path.dirname(output_file_path), exist_ok=True)
-
     # Save the image
     cv2.imwrite(output_file_path, img)
 
@@ -70,20 +67,25 @@ def resize(img: np.ndarray, crop: bool = False, new_width: int = 224) -> np.ndar
 @app.route('/api/resize', methods=['POST'])
 def api_resize():
     try:
+        # Log the incoming request
+        print("Form data:", request.form)
+        print("Files:", request.files)
+
         # Get the image file from the request
         file = request.files['image']
         crop = request.form.get('crop', 'false').lower() == 'true'
         new_width = int(request.form.get('new_width', 224))
+        output_path = request.form.get('output_path', '')
 
         # Convert the file to a NumPy array
-        np_img = np.fromstring(file.read(), np.uint8)
+        np_img = np.frombuffer(file.read(), np.uint8)
         img = cv2.imdecode(np_img, cv2.IMREAD_COLOR)
 
         # Resize the image
         resized_img = resize(img, crop, new_width)
 
         # Save the resized image to a file
-        output_path = 'resized_image.png'
+        output_path = output_path + 'resized_image.png'
         save_image(resized_img, output_path)
 
         return jsonify({"message": "Image resized successfully", "output_path": output_path}), 200
