@@ -64,4 +64,5 @@ def resize(image_file_path: str, crop: bool = False, new_width: int = 224) -> np
         new_img = cv2.resize(img, (new_width, new_width))
     return new_img
 
-
+def box_blur():
+    print("h")
