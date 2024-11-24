@@ -13,7 +13,8 @@ class ImageAIPackageTests(unittest.TestCase):
         iap.save_image(new_img, "unit_test_images/CroppedImg1.jpg")
 
     def test_region_grow(self):
-        iap.region_grow(iap.image_path_to_np_array("unit_test_images/TestImg1.jpg"), 10)
+        new_img = iap.region_grow(iap.image_path_to_np_array("unit_test_images/TestImg2.jpg"), 10)
+        iap.save_image(new_img, "unit_test_images/RegionGrowImg1.jpg")
 
 if __name__ == '__main__':
     unittest.main()
