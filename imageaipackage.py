@@ -537,13 +537,13 @@ def img_to_numpy_array(image_input, grey=False):
                ValueError: If the image_input is not a valid file path or np.ndarray
 
            """
-    if isinstance(image_input, numpy.ndarray):
+    if isinstance(image_input, np.ndarray):
         if grey:
             return convert_to_grey(image_input)
         return image_input
     elif isinstance(image_input, str):
         img = cv2.imread(image_input)
-        if isinstance(img, numpy.ndarray):
+        if isinstance(img, np.ndarray):
             if grey:
                 return convert_to_grey(img)
             return img
