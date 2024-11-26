@@ -5,6 +5,7 @@ import random
 from PIL import Image, ImageOps, ImageEnhance
 import os
 
+
 def overlay_images(image_path: str, overlay_path: str, transparency: float = 1.0):
     if not (0.0 <= transparency <= 1.0):
         raise ValueError('Transparency must be between 0.0 and 1.0')
@@ -16,7 +17,8 @@ def overlay_images(image_path: str, overlay_path: str, transparency: float = 1.0
     result = Image.alpha_composite(base_image, overlay_image)
     return np.array(result)
 
-def adjust_contrast(image_file_path: str, factor: float=1.0, chance: float=1.0):
+
+def adjust_contrast(image_file_path: str, factor: float = 1.0, chance: float = 1.0):
     if not (0 <= chance <= 1.0):
         raise ValueError('Chance must be between 0.0 and 1.0')
     if factor < 0:
@@ -28,7 +30,8 @@ def adjust_contrast(image_file_path: str, factor: float=1.0, chance: float=1.0):
     enhanced_image = enhancer.enhance(factor)
     return np.array(enhanced_image)
 
-def adjust_hue(image_file_path: str, factor: float=1.0, chance: float=1.0):
+
+def adjust_hue(image_file_path: str, factor: float = 1.0, chance: float = 1.0):
     if not (0 <= chance <= 1.0):
         raise ValueError('Chance must be between 0.0 and 1.0')
     if factor < 0:
@@ -39,20 +42,20 @@ def adjust_hue(image_file_path: str, factor: float=1.0, chance: float=1.0):
     hsv_image = image.convert("HSV")
     hsv_array = np.array(hsv_image)
     # print(hsv_array.shape)  # 500=height, 600=width, 3=channels of HSV
-    for i in range(hsv_array.shape[0]):		# height
-        for j in range(hsv_array.shape[1]):	# width
-            h, s, v = hsv_array[i, j]      	 # get hue, saturation, value
+    for i in range(hsv_array.shape[0]):  # height
+        for j in range(hsv_array.shape[1]):  # width
+            h, s, v = hsv_array[i, j]  # get hue, saturation, value
             h = int(h)
             # h is an 8 bit integer holding val's between 0-255. Convert to int.
-            h = (h*factor)%255
+            h = (h * factor) % 255
             # hue is measured in degrees so it wraps around thus we use %
-            hsv_array[i, j] = [h, s, v]  	# update the pixel
+            hsv_array[i, j] = [h, s, v]  # update the pixel
     adjusted_image = Image.fromarray(hsv_array, mode="HSV").convert("RGB")
     # converts an HSV array back to an RGB image using PIL library
     return np.array(adjusted_image)
 
 
-def adjust_brightness(image_file_path: str, factor: int =1.0, chance: float=1.0):
+def adjust_brightness(image_file_path: str, factor: int = 1.0, chance: float = 1.0):
     if not (0 <= chance <= 1.0):
         raise ValueError('Chance must be between 0.0 and 1.0')
     if factor < 0:
@@ -65,7 +68,7 @@ def adjust_brightness(image_file_path: str, factor: int =1.0, chance: float=1.0)
     return np.array(enhanced_image)
 
 
-def square_rotate(image_file_path: str, mode: int=0, chance: float=1.0):
+def square_rotate(image_file_path: str, mode: int = 0, chance: float = 1.0):
     if not (0 <= chance <= 1.0):
         raise ValueError('Chance must be between 0.0 and 1.0')
     if mode not in {0, 1, 2, 3}:
@@ -73,12 +76,12 @@ def square_rotate(image_file_path: str, mode: int=0, chance: float=1.0):
     image = Image.open(image_file_path)
     if random.random() > chance:
         return np.array(image)
-    angle = random.choice([90, 180, 270]) if mode == 3 else (mode+1) * 90
+    angle = random.choice([90, 180, 270]) if mode == 3 else (mode + 1) * 90
     rotated_image = image.rotate(angle)
     return np.array(rotated_image)
 
 
-def mirror_image(image_file_path: str, chance: float=1.0):
+def mirror_image(image_file_path: str, chance: float = 1.0):
     if chance != 1.0:
         chance = chance % 1.0
     roll = random.random()
@@ -87,7 +90,7 @@ def mirror_image(image_file_path: str, chance: float=1.0):
         mirrored_image = ImageOps.mirror(image)
     else:
         mirrored_image = image
-    #mirrored_image.show() #for testing purposes
+    # mirrored_image.show() #for testing purposes
     return np.array(mirrored_image)
 
 
@@ -98,6 +101,7 @@ def random_rotate(image_file_path: str):
     rotated_image.show()
     return np.array(rotated_image)
 
+
 def random_crop(image_file_path: str):
     image = Image.open(image_file_path)
     width, height = image.size
@@ -106,10 +110,10 @@ def random_crop(image_file_path: str):
     y_min = random.randint(0, height - smallest_edge) if height > smallest_edge else 0
     box = (x_min, y_min, x_min + smallest_edge, y_min + smallest_edge)
     cropped_image = image.crop(box)
-    #print(x_min) this code is to ensure randint() is working correctly
-    #print(y_min) this code is to ensure randint() is working correctly
+    # print(x_min) this code is to ensure randint() is working correctly
+    # print(y_min) this code is to ensure randint() is working correctly
     cropped_image_array = np.array(cropped_image)
-    #cropped_image.show()
+    # cropped_image.show()
     return cropped_image_array
 
 
@@ -433,7 +437,7 @@ class RegionGrow:
         return np.linalg.norm(self.im[x0, y0] - self.im[x, y])
 
 
-def blur(img_input, kernel_size=3):
+def blur(img: np.ndarray, kernel_size=3):
     """
         blur is a standard blur in which the current pixels value is changed to be the average of it's nxn neighbours
 
@@ -448,11 +452,12 @@ def blur(img_input, kernel_size=3):
         ValueError: If kernel_size is not an int, or the img is not inputted as a file path or np.ndarray
 
     """
-    img = img_to_numpy_array(img_input)
     if not isinstance(kernel_size, int):
         raise ValueError("kernel_size must be an int")
     return cv2.blur(img, (kernel_size, kernel_size))
-def bilateral_blur(img_input, diameter=9, sigma_color=75, sigma_space=75):
+
+
+def bilateral_blur(img: np.ndarray, diameter=9, sigma_color=75, sigma_space=75):
     """
     bilateral_blur is used to maintain edges whilst smoothing the image
 
@@ -470,11 +475,12 @@ def bilateral_blur(img_input, diameter=9, sigma_color=75, sigma_space=75):
         ValueError: If diameter is not an int, sigma_color or sigma_space are not a numeric value, also img_input
 
     """
-    img = img_to_numpy_array(img_input)
     if not isinstance(diameter, int) or not isinstance(sigma_space, int) or not isinstance(sigma_color, int):
         raise ValueError("diameter, sigma_color and sigma_space must be an int")
     return cv2.bilateralFilter(img, diameter, sigma_color, sigma_space)
-def gaussian_blur(img_input, kernel_size=3, sigma=3):
+
+
+def gaussian_blur(img: np.ndarray, kernel_size=3, sigma=3):
     """
        gaussian_blur is used to favour closer neighbours more then further neighbours
 
@@ -490,11 +496,12 @@ def gaussian_blur(img_input, kernel_size=3, sigma=3):
            ValueError: If kernel_size is not an int or sigma is not a float, also img_input
 
        """
-    img = img_to_numpy_array(img_input)
     if not isinstance(kernel_size, int) or not (isinstance(sigma, int) or isinstance(sigma, float)):
         raise ValueError("kernel_size must be an int and sigma must be a numeric value")
     return cv2.GaussianBlur(img, (kernel_size, kernel_size), sigma)
-def median_blur(img_input, kernel_size=3) -> numpy.ndarray:
+
+
+def median_blur(img: np.ndarray, kernel_size=3) -> np.ndarray:
     """
            median_blur is used to make the current pixel value the median value in all neighbours
 
@@ -509,10 +516,11 @@ def median_blur(img_input, kernel_size=3) -> numpy.ndarray:
                ValueError: If kernel_size is not an int, also img_input
 
            """
-    img = img_to_numpy_array(img_input)
     if not isinstance(kernel_size, int):
         raise ValueError("kernel_size must be an int")
     return cv2.medianBlur(img, kernel_size)
+
+
 def img_to_numpy_array(image_input, grey=False):
     """
            img_to_numpy_array checks whether the input is a file path or a np.ndarray, if it's a file path then it
@@ -543,6 +551,7 @@ def img_to_numpy_array(image_input, grey=False):
         raise ValueError("File path must be a valid file path")
     raise ValueError("Image must be either a valid file path or a numpy array")
 
+
 def convert_to_grey(img):
     """
             convert_to_gray takens in a np.ndarray and converts it to greyscale, it is useful because it is not
@@ -559,7 +568,8 @@ def convert_to_grey(img):
         return img
     return cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
 
-def laplacian(img_input, kernel_size):
+
+def laplacian(img: np.ndarray, kernel_size):
     """
             Laplacian takes the second derivative in the change of pixels to try and find egdes
 
@@ -576,11 +586,12 @@ def laplacian(img_input, kernel_size):
     """
     if not isinstance(kernel_size, int):
         raise ValueError("kernel_size must be an integer")
-    img = img_to_numpy_array(img_input)
     dst = cv2.Laplacian(gaussian_blur(img, 3, 1), cv2.CV_16S, ksize=kernel_size)
     abs_dst = cv2.convertScaleAbs(dst)
     return abs_dst
-def custom_kernel_blur(img_input, kernel):
+
+
+def custom_kernel_blur(img: np.ndarray, kernel):
     """
             Takes a customer kernel as an input and returns a modified version of the image based on the blur
 
@@ -596,12 +607,12 @@ def custom_kernel_blur(img_input, kernel):
 
 
     """
-    img = img_to_numpy_array(img_input)
     if not isinstance(kernel, np.ndarray):
         raise ValueError("kernel must be a np.ndarray")
     return cv2.filter2D(img, -1, kernel)
 
-def sharpen(img_input, sharpness):
+
+def sharpen(img: np.ndarray, sharpness):
     """
             Sharpens the image using a custom sharpness
 
@@ -618,13 +629,13 @@ def sharpen(img_input, sharpness):
     """
     if not isinstance(sharpness, float) or not isinstance(sharpness, int):
         raise ValueError("sharpness must be a numeric value")
-    contrast = (sharpness * (8/9)) / 8 * -1
-    img = img_to_numpy_array(img_input)
+    contrast = (sharpness * (8 / 9)) / 8 * -1
     return custom_kernel_blur(img, np.array([[contrast, contrast, contrast],
                                              [contrast, sharpness, contrast],
                                              [contrast, contrast, contrast]]))
 
-def adaptive_thresholding(img_input, block_size=11, const_c=2):
+
+def adaptive_thresholding(img: np.ndarray, block_size=11, const_c=2):
     """
             Adaptive Thresholding takes the area around each pixel (block_size) and thresholds the current pixel based on that area
             This allows for better thresholding as it accounts for shadows and other noise
@@ -644,11 +655,12 @@ def adaptive_thresholding(img_input, block_size=11, const_c=2):
     if not isinstance(block_size, int) or not isinstance(const_c, int):
         raise ValueError("block_size and const_c must both be ints")
 
-    img = img_to_numpy_array(img_input)
     blur = median_blur(img, 5)
-    return cv2.adaptiveThreshold(median_blur(blur, 5), 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, block_size, const_c)
+    return cv2.adaptiveThreshold(median_blur(blur, 5), 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY,
+                                 block_size, const_c)
 
-def otsus_binarization_thresholding(img_input):
+
+def otsus_binarization_thresholding(img: np.ndarray):
     """
             Otsus binariation threshoding looks for two classes that either maximise inter-class variance
             or minimsize intra-class variance
@@ -660,12 +672,12 @@ def otsus_binarization_thresholding(img_input):
                 np.ndarray: A np.ndarray representing the result of otsus binrization thresholding
 
     """
-    img = img_to_numpy_array(img_input)
     blur = gaussian_blur(img, 5, 0)
-    ret3, th3 = cv2.threshold(blur, 0, 255, cv2.THRESH_BINARY+cv2.THRESH_OTSU)
+    ret3, th3 = cv2.threshold(blur, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
     return th3
 
-def edge_detection(img_input, min_val=100, max_val=200):
+
+def edge_detection(img: np.ndarray, min_val=100, max_val=200):
     """
             Uses canny edge detector to outline edges in the image
 
@@ -684,11 +696,12 @@ def edge_detection(img_input, min_val=100, max_val=200):
     if not isinstance(min_val, int) or not isinstance(max_val, int):
         raise ValueError("min_val and max_val must be input as integers")
     if (min_val < 0 or min_val > 255) or (max_val < 0 or max_val > 255) or (max_val - min_val <= 0):
-        raise ValueError("min_val and max_val must be between 0 and 255 and min_val cannot be greater or equal to max_val")
-    img = img_to_numpy_array(img_input)
+        raise ValueError(
+            "min_val and max_val must be between 0 and 255 and min_val cannot be greater or equal to max_val")
     return cv2.Canny(img, min_val, max_val)
 
-def watershed(img_input):
+
+def watershed(img: np.ndarray):
     """
             Watershed takes advantage of the fact that any greyscale image can be viewed as a topographic map
             The algorithm fills the valleys, the problem with this is that as valleys water level rises,
@@ -702,8 +715,7 @@ def watershed(img_input):
                 np.ndarray: Returns a np.ndarray with the borders of the valleys
 
     """
-    returnImg = img_to_numpy_array(img_input)
-    img = img_to_numpy_array(img_input, grey=True)
+    returnImg = img
 
     img = otsus_binarization_thresholding(img)
     kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (5, 5))
