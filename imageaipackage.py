@@ -623,3 +623,4 @@ def watershed(img_input):
 
     returnImg = cv2.drawContours(returnImg, objects, -1, color=(0, 0, 255), thickness=2)
     return returnImg
+
