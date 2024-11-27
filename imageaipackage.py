@@ -467,7 +467,7 @@ def gaussian_blur(img_input, kernel_size=3, sigma=3):
     if not isinstance(kernel_size, int) or not (isinstance(sigma, int) or isinstance(sigma, float)):
         raise ValueError("kernel_size must be an int and sigma must be a numeric value")
     return cv2.GaussianBlur(img, (kernel_size, kernel_size), sigma)
-def median_blur(img_input, kernel_size=3) -> numpy.ndarray:
+def median_blur(img_input, kernel_size=3) -> np.ndarray:
     """
            median_blur is used to make the current pixel value the median value in all neighbours
 
