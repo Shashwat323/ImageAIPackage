@@ -437,7 +437,7 @@ class RegionGrow:
         return np.linalg.norm(self.im[x0, y0] - self.im[x, y])
 
 
-def blur(img: np.ndarray, kernel_size=3):
+def blur(img_input, kernel_size=3):
     """
         blur is a standard blur in which the current pixels value is changed to be the average of it's nxn neighbours
 
@@ -452,12 +452,11 @@ def blur(img: np.ndarray, kernel_size=3):
         ValueError: If kernel_size is not an int, or the img is not inputted as a file path or np.ndarray
 
     """
+    img = img_to_numpy_array(img_input, grey=True)
     if not isinstance(kernel_size, int):
         raise ValueError("kernel_size must be an int")
     return cv2.blur(img, (kernel_size, kernel_size))
-
-
-def bilateral_blur(img: np.ndarray, diameter=9, sigma_color=75, sigma_space=75):
+def bilateral_blur(img_input, diameter=9, sigma_color=75, sigma_space=75):
     """
     bilateral_blur is used to maintain edges whilst smoothing the image
 
@@ -475,12 +474,11 @@ def bilateral_blur(img: np.ndarray, diameter=9, sigma_color=75, sigma_space=75):
         ValueError: If diameter is not an int, sigma_color or sigma_space are not a numeric value, also img_input
 
     """
+    img = img_to_numpy_array(img_input, grey=True)
     if not isinstance(diameter, int) or not isinstance(sigma_space, int) or not isinstance(sigma_color, int):
         raise ValueError("diameter, sigma_color and sigma_space must be an int")
     return cv2.bilateralFilter(img, diameter, sigma_color, sigma_space)
-
-
-def gaussian_blur(img: np.ndarray, kernel_size=3, sigma=3):
+def gaussian_blur(img_input, kernel_size=3, sigma=3):
     """
        gaussian_blur is used to favour closer neighbours more then further neighbours
 
@@ -496,12 +494,11 @@ def gaussian_blur(img: np.ndarray, kernel_size=3, sigma=3):
            ValueError: If kernel_size is not an int or sigma is not a float, also img_input
 
        """
+    img = img_to_numpy_array(img_input, grey=True)
     if not isinstance(kernel_size, int) or not (isinstance(sigma, int) or isinstance(sigma, float)):
         raise ValueError("kernel_size must be an int and sigma must be a numeric value")
     return cv2.GaussianBlur(img, (kernel_size, kernel_size), sigma)
-
-
-def median_blur(img: np.ndarray, kernel_size=3) -> np.ndarray:
+def median_blur(img_input, kernel_size=3):
     """
            median_blur is used to make the current pixel value the median value in all neighbours
 
@@ -516,6 +513,7 @@ def median_blur(img: np.ndarray, kernel_size=3) -> np.ndarray:
                ValueError: If kernel_size is not an int, also img_input
 
            """
+    img = img_to_numpy_array(img_input, grey=True)
     if not isinstance(kernel_size, int):
         raise ValueError("kernel_size must be an int")
     return cv2.medianBlur(img, kernel_size)
@@ -568,8 +566,7 @@ def convert_to_grey(img):
         return img
     return cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
 
-
-def laplacian(img: np.ndarray, kernel_size):
+def laplacian(img_input, kernel_size):
     """
             Laplacian takes the second derivative in the change of pixels to try and find egdes
 
@@ -586,12 +583,11 @@ def laplacian(img: np.ndarray, kernel_size):
     """
     if not isinstance(kernel_size, int):
         raise ValueError("kernel_size must be an integer")
+    img = img_to_numpy_array(img_input, grey=True)
     dst = cv2.Laplacian(gaussian_blur(img, 3, 1), cv2.CV_16S, ksize=kernel_size)
     abs_dst = cv2.convertScaleAbs(dst)
     return abs_dst
-
-
-def custom_kernel_blur(img: np.ndarray, kernel):
+def custom_kernel_blur(img_input, kernel):
     """
             Takes a customer kernel as an input and returns a modified version of the image based on the blur
 
@@ -607,12 +603,12 @@ def custom_kernel_blur(img: np.ndarray, kernel):
 
 
     """
+    img = img_to_numpy_array(img_input, grey=True)
     if not isinstance(kernel, np.ndarray):
         raise ValueError("kernel must be a np.ndarray")
     return cv2.filter2D(img, -1, kernel)
 
-
-def sharpen(img: np.ndarray, sharpness):
+def sharpen(img_input, sharpness):
     """
             Sharpens the image using a custom sharpness
 
@@ -627,15 +623,15 @@ def sharpen(img: np.ndarray, sharpness):
                 ValueError: Raises a Value Error if sharpness is not a numeric value
 
     """
-    if not isinstance(sharpness, float) or not isinstance(sharpness, int):
+    if not (isinstance(sharpness, float) or isinstance(sharpness, int)):
         raise ValueError("sharpness must be a numeric value")
-    contrast = (sharpness * (8 / 9)) / 8 * -1
+    contrast = (sharpness * (8/9)) / 8 * -1
+    img = img_to_numpy_array(img_input, grey=True)
     return custom_kernel_blur(img, np.array([[contrast, contrast, contrast],
                                              [contrast, sharpness, contrast],
                                              [contrast, contrast, contrast]]))
 
-
-def adaptive_thresholding(img: np.ndarray, block_size=11, const_c=2):
+def adaptive_thresholding(img_input, block_size=11, const_c=2):
     """
             Adaptive Thresholding takes the area around each pixel (block_size) and thresholds the current pixel based on that area
             This allows for better thresholding as it accounts for shadows and other noise
@@ -655,12 +651,11 @@ def adaptive_thresholding(img: np.ndarray, block_size=11, const_c=2):
     if not isinstance(block_size, int) or not isinstance(const_c, int):
         raise ValueError("block_size and const_c must both be ints")
 
+    img = img_to_numpy_array(img_input, grey=True)
     blur = median_blur(img, 5)
-    return cv2.adaptiveThreshold(median_blur(blur, 5), 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY,
-                                 block_size, const_c)
+    return cv2.adaptiveThreshold(median_blur(blur, 5), 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, block_size, const_c)
 
-
-def otsus_binarization_thresholding(img: np.ndarray):
+def otsus_binarization_thresholding(img_input):
     """
             Otsus binariation threshoding looks for two classes that either maximise inter-class variance
             or minimsize intra-class variance
@@ -672,12 +667,12 @@ def otsus_binarization_thresholding(img: np.ndarray):
                 np.ndarray: A np.ndarray representing the result of otsus binrization thresholding
 
     """
+    img = img_to_numpy_array(img_input, grey=True)
     blur = gaussian_blur(img, 5, 0)
-    ret3, th3 = cv2.threshold(blur, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    ret3, th3 = cv2.threshold(blur, 0, 255, cv2.THRESH_BINARY+cv2.THRESH_OTSU)
     return th3
 
-
-def edge_detection(img: np.ndarray, min_val=100, max_val=200):
+def edge_detection(img_input, min_val=100, max_val=200):
     """
             Uses canny edge detector to outline edges in the image
 
@@ -696,12 +691,11 @@ def edge_detection(img: np.ndarray, min_val=100, max_val=200):
     if not isinstance(min_val, int) or not isinstance(max_val, int):
         raise ValueError("min_val and max_val must be input as integers")
     if (min_val < 0 or min_val > 255) or (max_val < 0 or max_val > 255) or (max_val - min_val <= 0):
-        raise ValueError(
-            "min_val and max_val must be between 0 and 255 and min_val cannot be greater or equal to max_val")
+        raise ValueError("min_val and max_val must be between 0 and 255 and min_val cannot be greater or equal to max_val")
+    img = img_to_numpy_array(img_input, grey=True)
     return cv2.Canny(img, min_val, max_val)
 
-
-def watershed(img: np.ndarray):
+def watershed(img_input):
     """
             Watershed takes advantage of the fact that any greyscale image can be viewed as a topographic map
             The algorithm fills the valleys, the problem with this is that as valleys water level rises,
@@ -715,7 +709,8 @@ def watershed(img: np.ndarray):
                 np.ndarray: Returns a np.ndarray with the borders of the valleys
 
     """
-    returnImg = img
+    returnImg = img_to_numpy_array(img_input)
+    img = img_to_numpy_array(img_input, grey=True)
 
     img = otsus_binarization_thresholding(img)
     kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (5, 5))
