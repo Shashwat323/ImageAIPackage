@@ -421,7 +421,7 @@ def blur(img_input, kernel_size=3):
         ValueError: If kernel_size is not an int, or the img is not inputted as a file path or np.ndarray
 
     """
-    img = img_to_numpy_array(img_input)
+    img = img_to_numpy_array(img_input, grey=True)
     if not isinstance(kernel_size, int):
         raise ValueError("kernel_size must be an int")
     return cv2.blur(img, (kernel_size, kernel_size))
@@ -443,7 +443,7 @@ def bilateral_blur(img_input, diameter=9, sigma_color=75, sigma_space=75):
         ValueError: If diameter is not an int, sigma_color or sigma_space are not a numeric value, also img_input
 
     """
-    img = img_to_numpy_array(img_input)
+    img = img_to_numpy_array(img_input, grey=True)
     if not isinstance(diameter, int) or not isinstance(sigma_space, int) or not isinstance(sigma_color, int):
         raise ValueError("diameter, sigma_color and sigma_space must be an int")
     return cv2.bilateralFilter(img, diameter, sigma_color, sigma_space)
@@ -463,11 +463,11 @@ def gaussian_blur(img_input, kernel_size=3, sigma=3):
            ValueError: If kernel_size is not an int or sigma is not a float, also img_input
 
        """
-    img = img_to_numpy_array(img_input)
+    img = img_to_numpy_array(img_input, grey=True)
     if not isinstance(kernel_size, int) or not (isinstance(sigma, int) or isinstance(sigma, float)):
         raise ValueError("kernel_size must be an int and sigma must be a numeric value")
     return cv2.GaussianBlur(img, (kernel_size, kernel_size), sigma)
-def median_blur(img_input, kernel_size=3) -> np.ndarray:
+def median_blur(img_input, kernel_size=3):
     """
            median_blur is used to make the current pixel value the median value in all neighbours
 
@@ -482,10 +482,12 @@ def median_blur(img_input, kernel_size=3) -> np.ndarray:
                ValueError: If kernel_size is not an int, also img_input
 
            """
-    img = img_to_numpy_array(img_input)
+    img = img_to_numpy_array(img_input, grey=True)
     if not isinstance(kernel_size, int):
         raise ValueError("kernel_size must be an int")
     return cv2.medianBlur(img, kernel_size)
+
+
 def img_to_numpy_array(image_input, grey=False):
     """
            img_to_numpy_array checks whether the input is a file path or a np.ndarray, if it's a file path then it
@@ -502,19 +504,20 @@ def img_to_numpy_array(image_input, grey=False):
                ValueError: If the image_input is not a valid file path or np.ndarray
 
            """
-    if isinstance(image_input, numpy.ndarray):
+    if isinstance(image_input, np.ndarray):
         if grey:
             return convert_to_grey(image_input)
         return image_input
     elif isinstance(image_input, str):
         img = cv2.imread(image_input)
-        if isinstance(img, numpy.ndarray):
+        if isinstance(img, np.ndarray):
             if grey:
                 return convert_to_grey(img)
             return img
     if isinstance(image_input, str):
         raise ValueError("File path must be a valid file path")
     raise ValueError("Image must be either a valid file path or a numpy array")
+
 
 def convert_to_grey(img):
     """
@@ -549,7 +552,7 @@ def laplacian(img_input, kernel_size):
     """
     if not isinstance(kernel_size, int):
         raise ValueError("kernel_size must be an integer")
-    img = img_to_numpy_array(img_input)
+    img = img_to_numpy_array(img_input, grey=True)
     dst = cv2.Laplacian(gaussian_blur(img, 3, 1), cv2.CV_16S, ksize=kernel_size)
     abs_dst = cv2.convertScaleAbs(dst)
     return abs_dst
@@ -569,7 +572,7 @@ def custom_kernel_blur(img_input, kernel):
 
 
     """
-    img = img_to_numpy_array(img_input)
+    img = img_to_numpy_array(img_input, grey=True)
     if not isinstance(kernel, np.ndarray):
         raise ValueError("kernel must be a np.ndarray")
     return cv2.filter2D(img, -1, kernel)
@@ -589,10 +592,10 @@ def sharpen(img_input, sharpness):
                 ValueError: Raises a Value Error if sharpness is not a numeric value
 
     """
-    if not isinstance(sharpness, float) or not isinstance(sharpness, int):
+    if not (isinstance(sharpness, float) or isinstance(sharpness, int)):
         raise ValueError("sharpness must be a numeric value")
     contrast = (sharpness * (8/9)) / 8 * -1
-    img = img_to_numpy_array(img_input)
+    img = img_to_numpy_array(img_input, grey=True)
     return custom_kernel_blur(img, np.array([[contrast, contrast, contrast],
                                              [contrast, sharpness, contrast],
                                              [contrast, contrast, contrast]]))
@@ -617,7 +620,7 @@ def adaptive_thresholding(img_input, block_size=11, const_c=2):
     if not isinstance(block_size, int) or not isinstance(const_c, int):
         raise ValueError("block_size and const_c must both be ints")
 
-    img = img_to_numpy_array(img_input)
+    img = img_to_numpy_array(img_input, grey=True)
     blur = median_blur(img, 5)
     return cv2.adaptiveThreshold(median_blur(blur, 5), 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, block_size, const_c)
 
@@ -633,7 +636,7 @@ def otsus_binarization_thresholding(img_input):
                 np.ndarray: A np.ndarray representing the result of otsus binrization thresholding
 
     """
-    img = img_to_numpy_array(img_input)
+    img = img_to_numpy_array(img_input, grey=True)
     blur = gaussian_blur(img, 5, 0)
     ret3, th3 = cv2.threshold(blur, 0, 255, cv2.THRESH_BINARY+cv2.THRESH_OTSU)
     return th3
@@ -658,7 +661,7 @@ def edge_detection(img_input, min_val=100, max_val=200):
         raise ValueError("min_val and max_val must be input as integers")
     if (min_val < 0 or min_val > 255) or (max_val < 0 or max_val > 255) or (max_val - min_val <= 0):
         raise ValueError("min_val and max_val must be between 0 and 255 and min_val cannot be greater or equal to max_val")
-    img = img_to_numpy_array(img_input)
+    img = img_to_numpy_array(img_input, grey=True)
     return cv2.Canny(img, min_val, max_val)
 
 def watershed(img_input):
