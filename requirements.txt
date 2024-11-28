@@ -7,4 +7,4 @@ torch~=2.5.1
 torchvision~=0.20.1
 pandas~=2.2.3
 matplotlib~=3.9.2
-Akagglehub~=0.3.4
+kagglehub~=0.3.4
