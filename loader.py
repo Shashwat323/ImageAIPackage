@@ -124,8 +124,6 @@ def get_dataloaders(batch_size=16, augmented=True, vit_transformed=True, show_sa
 
     return train_loader, test_loader, val_loader
 
-
-
 # for test
 if __name__ == "__main__":
     get_dataloaders(augmented=False, vit_transformed=False, show_sample=True, detection="none")
