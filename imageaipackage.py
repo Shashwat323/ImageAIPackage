@@ -1,67 +1,146 @@
-def resize(image_file_path: str, crop: bool, width: int, height: int) -> str:
-    pass
-
-from PIL import Image
-import os
-
-def gray_scale(image_file_path: str, mode: int = 1):
-    # mode 1 = gray scale 0-255
-    # mode 2 = 8 bit gray scale
-    # mode 3 = black and white
-    image = Image.open(image_file_path)
-    if mode == 1:
-        gray_scaled_image = image.convert("L")
-    elif mode == 2:
-        gray_scaled_image = image.quantize(colors=256)
-        gray_scaled_image = image.convert("L")
-    elif mode == 3:
-        gray_scaled_image =image.convert("1")
-    else:
-        print("Error, incorrect mode")
-    # return image here. (Return model to be decided)
-import os
-
-import cv2
 import numpy as np
+from PIL import Image
+import cv2
+import rembg
+import os
 
-def save_image(img: np.ndarray, output_file_path: str) -> None:
-    if img is None:
-        raise ValueError("Cannot save an image that is None.")
+"""
+# Image
+img = Image.open('Sample.png')
+# Convert to Array
+numpydata = np.asarray(img)
+# Convert from Array
+pilImage = Image.fromarray(numpydata)
 
-    # Ensure the directory exists
-    os.makedirs(os.path.dirname(output_file_path), exist_ok=True)
+or
+# Save the image using OpenCV
+cv2.imwrite('rgb_image_opencv.png', np_image)
+"""
 
-    # Save the image
-    cv2.imwrite(output_file_path, img)
+def normalise(image_file_path: str,greyscale: bool=False):
+    # Read image
+    image = cv2.imread(image_file_path)
+    gray_image = image
+    if (greyscale != True):
+        # Image to grayscale
+        gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    # Normalize grayscale
+    #normalized_gray_image = cv2.normalize(gray_image, None, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX)
+    normalized_gray_image = gray_image / 255.0
+    return normalized_gray_image
 
-def resize(image_file_path: str, crop: bool = False, new_width: int = 224) -> np.ndarray:
-    """
-    Resize or crop an image based on the given parameters.
+def normalise(img: np.ndarray, greyscale: bool=False):
+    if (greyscale != True):
+        img = sum(img) / 3
+    return img / 255
 
-    This function reads an image from the specified file path and either resizes
-    or crops it to the provided new width.
-
-    Args:
-        image_file_path (str): The path to the input image file.
-        crop (bool): Whether to crop to square or resize the image. Default is False.
-        new_width (int): The new width and height of the image if not cropping. Default is 224.
-
-    Returns:
-        np.ndarray: The resized or cropped image as a NumPy array. If the image
-        cannot be loaded, the function returns None.
-
-    Raises:
-        ValueError: If the new width is not a positive integer.
-    """
+# CLAHE (Contrast Limited Adaptive Histogram Equalization)
+def histogram_equalisation(image_file_path: str, greyscale: bool=False, clahe: bool=False, gridsize: int=8):
+    # Read image
     img = cv2.imread(image_file_path)
-    if crop:
-        height, width = img.shape[:2]
-        size = min(height, width)
-        x = int((width - size) / 2)
-        y = int((height - size) / 2)
-        new_img = img[y:y + size, x:x + size]
+    if (clahe == False):
+        if (greyscale):
+            # Image to grayscale
+            grey_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+            # Apply histogram equalisation
+            image = cv2.equalizeHist(grey_img)
+        else:
+            # Convert to HSV
+            img_hsv = cv2.cvtColor(image, cv2.COLOR_RGB2HSV)
+            # Histogram equalisation on V-channel
+            img_hsv[:, :, 2] = cv2.equalizeHist(img_hsv[:, :, 2])
+            # Convert to RGB
+            image = cv2.cvtColor(img_hsv, cv2.COLOR_HSV2RGB)
     else:
-        new_img = cv2.resize(img, (new_width, new_width))
-    return new_img
+        if (greyscale):
+            # Image to grayscale
+            grey_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+            # Create and apply CLAHE
+            image = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(gridsize,gridsize)).apply(grey_img)
+        else:
+            # Convert to HSV
+            img_hsv = cv2.cvtColor(image, cv2.COLOR_RGB2HSV)
+            # Histogram equalisation on V-channel
+            img_hsv[:, :, 2] = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(gridsize,gridsize)).apply(img_hsv[:, :, 2])
+            # Convert to RGB
+            image = cv2.cvtColor(img_hsv, cv2.COLOR_HSV2RGB)
+    return image
 
+def histogram_equalisation(img: np.ndarray, greyscale: bool=False, clahe: bool=False, gridsize: int=8):
+    cv2.imwrite("temp.jpg",img)
+    # Read image
+    img = cv2.imread("temp.jpg")
+    if (clahe == False):
+        if (greyscale):
+            # Image to grayscale
+            grey_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+            # Apply histogram equalisation
+            image = cv2.equalizeHist(grey_img)
+        else:
+            # Convert to HSV
+            img_hsv = cv2.cvtColor(image, cv2.COLOR_RGB2HSV)
+            # Histogram equalisation on V-channel
+            img_hsv[:, :, 2] = cv2.equalizeHist(img_hsv[:, :, 2])
+            # Convert to RGB
+            image = cv2.cvtColor(img_hsv, cv2.COLOR_HSV2RGB)
+    else:
+        if (greyscale):
+            # Image to grayscale
+            grey_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+            # Create and apply CLAHE
+            image = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(gridsize,gridsize)).apply(grey_img)
+        else:
+            # Convert to HSV
+            img_hsv = cv2.cvtColor(image, cv2.COLOR_RGB2HSV)
+            # Histogram equalisation on V-channel
+            img_hsv[:, :, 2] = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(gridsize,gridsize)).apply(img_hsv[:, :, 2])
+            # Convert to RGB
+            image = cv2.cvtColor(img_hsv, cv2.COLOR_HSV2RGB)
+    os.remove("temp.jpg")
+    return image
 
+def zeroMeanOneVar(image_file_path: str):
+    image = cv2.imread(image_file_path)
+    # Image to grayscale
+    gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    # Find mean and std
+    mean, std_dev = cv2.meanStdDev(gray_image)
+    # Normalise image
+    normalized_image = (gray_image - mean) / std_dev
+    return normalized_image
+
+def zeroMeanOneVar(img: np.ndarray):
+    cv2.imwrite("temp.jpg",img)
+    # Read image
+    image = cv2.imread("temp.jpg")
+    # Image to grayscale
+    gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    # Find mean and std
+    mean, std_dev = cv2.meanStdDev(gray_image)
+    # Normalise image
+    normalized_image = (gray_image - mean) / std_dev
+    os.remove("temp.jpg")
+    return normalized_image
+
+def minMaxScaling(image_file_path: str):
+    # Read image
+    image = cv2.imread(image_file_path)
+    # Image to grayscale
+    gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    # Min-Max values
+    min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(gray_image)
+    # Normalise image
+    normalized_image = (gray_image - min_val) / (max_val - min_val)
+    return normalized_image
+
+def removeBackground(image_file_path: str):
+    # Read image
+    img = Image.open(image_file_path)
+    # Remove background
+    rem = rembg.remove(img)
+    return rem
+
+def removeBackground(img: np.ndarray):
+    # Remove background
+    output = rembg.remove(img)
+    return output
