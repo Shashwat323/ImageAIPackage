@@ -30,7 +30,6 @@ augment = iap.TransformPipeline([
 ])
 
 tensor = iap.TransformPipeline([
-    iap.normalise,
     transforms.ToTensor(),  # Converts PIL Image or NumPy ndarray to tensor and scales to [0, 1]
     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])  # Normalize with ImageNet statistics
 ])
@@ -168,5 +167,5 @@ def get_dataloaders(batch_size=16, root=""):
 if __name__ == "__main__":
     dataset = ImageDataset("D:\\Other\\Repos\\ImageAIPackage\\dataset\\train", transform=normalize, label_transform=flower_label_to_int)
     augmented_dataset = AugmentedImageDataset(dataset, transform=augment)
-    #augmented_dataset = TransformedImageDataset(augmented_dataset, transform=tensor)
+    augmented_dataset = TransformedImageDataset(augmented_dataset, transform=tensor)
     show_sample_image(augmented_dataset)
