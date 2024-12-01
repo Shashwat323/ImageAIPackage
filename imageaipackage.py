@@ -2,74 +2,14 @@ import cv2
 import itertools
 import numpy as np
 import random
+
+from typing import Callable, List, Union
+import torch
 from PIL import Image, ImageOps, ImageEnhance
 import os
 from PIL import Image, ImageEnhance, ImageOps
 import numpy as np
 import random
-
-# import libraries
-import torch
-import torch.nn as nn
-import torchvision
-import torchvision.transforms as transforms
-import matplotlib.pyplot as plt
-from PIL import Image
-
-
-# class
-class FlexibleModel(nn.Module):  # inherit from nn.Module
-    # Why do we inherit from nn.Module? I know why we’d need to (obviously) but what changes does it do specifically
-    def __init__(self, input_size, hidden_size, output_size):
-        super(FlexibleModel, self).__init__()
-        # what is this “super()” function doing?
-        self.l1 = nn.Linear(input_size, hidden_size)
-        self.relu = nn.ReLU()
-        self.l2 = nn.Linear(hidden_size, output_size)
-        # Are these functions or variables?
-
-    def forward(self, x):
-        # we should probably ensure x is an image of size input_size each time.
-        out = self.l1(x)
-        out = self.relu(out)
-        out = self.l2(out)
-        return out
-        # Based on this we can assume the above self.l1 = nn.Linear() calls are functions?
-
-    def train_model(self, train_loader, num_epochs, learning_rate):
-        criterion = nn.CrossEntropyLoss()
-        optimizer = torch.optim.Adam(self.parameters(), lr=learning_rate)
-
-        for epoch in range(num_epochs):
-            for images, labels in train_loader:
-                images = torch.flatten(images, start_dim=1)
-                if images.shape[1] != self.l1.in_features:
-                    raise ValueError('incorrect input size')
-                outputs = self.forward(images)
-                loss = criterion(outputs, labels)
-                optimizer.zero_grad()
-                loss.backward()
-                optimizer.step()
-            print(f'Epoch [{epoch + 1}/{num_epochs}]')
-
-    def test_model(self, test_loader):
-        self.eval()  # Set model to evaluation mode
-        correct = 0
-        total = 0
-
-        with torch.no_grad():
-            for images, labels in test_loader:
-                images = torch.flatten(images, start_dim=1)
-                outputs = self.forward(images)
-                _, predicted = torch.max(outputs, 1)
-                for p, l in zip(predicted, labels):
-                    # How is this for loop checking if labels = predictions? What does zip function do?
-                    if p == l:
-                        correct += 1
-                    total += 1
-        accuracy = 100 * correct / total
-        print(f'Test Accuracy: {accuracy}%')
-        return accuracy
 
 def overlay_images(base_image_array: np.ndarray, overlay_image_array: np.ndarray, transparency: float = 1.0):
     if not (0.0 <= transparency <= 1.0):
@@ -82,66 +22,40 @@ def overlay_images(base_image_array: np.ndarray, overlay_image_array: np.ndarray
     result = Image.alpha_composite(base_image, overlay_image)
     return np.array(result)
 
-def adjust_contrast(image_array: np.ndarray, factor: float = 1.0, chance: float = 1.0):
-    if not (0 <= chance <= 1.0):
-        raise ValueError('Chance must be between 0.0 and 1.0')
-    if factor < 0:
-        raise ValueError('Factor must be > 0')
+def adjust_contrast(image_array: np.ndarray, mini: float = 0.5, maxi: float = 1.5):
     image = Image.fromarray(image_array)
-    if random.random() > chance:
-        return image_array
     enhancer = ImageEnhance.Contrast(image)
-    enhanced_image = enhancer.enhance(factor)
+    enhanced_image = enhancer.enhance(random.uniform(mini, maxi))
     return np.array(enhanced_image)
 
-def adjust_hue(image_array: np.ndarray, factor: float = 1.0, chance: float = 1.0):
-    if not (0 <= chance <= 1.0):
-        raise ValueError('Chance must be between 0.0 and 1.0')
-    if factor < 0:
-        raise ValueError('Factor must be > 0')
+def adjust_hue(image_array: np.ndarray, mini: float = 0.7, maxi: float = 1.3):
     image = Image.fromarray(image_array).convert("HSV")
-    if random.random() > chance:
-        return image_array
     hsv_array = np.array(image)
     for i in range(hsv_array.shape[0]):  # height
         for j in range(hsv_array.shape[1]):  # width
             h, s, v = hsv_array[i, j]  # get hue, saturation, value
             h = int(h)
-            h = (h * factor) % 255
+            h = (h * random.uniform(mini, maxi)) % 255
             hsv_array[i, j] = [h, s, v]
     adjusted_image = Image.fromarray(hsv_array, mode="HSV").convert("RGB")
     return np.array(adjusted_image)
 
-def adjust_brightness(image_array: np.ndarray, factor: float = 1.0, chance: float = 1.0):
-    if not (0 <= chance <= 1.0):
-        raise ValueError('Chance must be between 0.0 and 1.0')
-    if factor < 0:
-        raise ValueError('Factor must be > 0')
+def adjust_brightness(image_array: np.ndarray, mini: float = 0.7, maxi: float = 1.3):
     image = Image.fromarray(image_array)
-    if random.random() > chance:
-        return image_array
     enhancer = ImageEnhance.Brightness(image)
-    enhanced_image = enhancer.enhance(factor)
+    enhanced_image = enhancer.enhance(random.uniform(mini, maxi))
     return np.array(enhanced_image)
 
-def square_rotate(image_array: np.ndarray, mode: int = 0, chance: float = 1.0):
-    if not (0 <= chance <= 1.0):
-        raise ValueError('Chance must be between 0.0 and 1.0')
-    if mode not in {0, 1, 2, 3}:
-        raise ValueError('Mode must be 0, 1, 2, or 3')
+def square_rotate(image_array: np.ndarray):
     image = Image.fromarray(image_array)
-    if random.random() > chance:
-        return image_array
-    angle = random.choice([90, 180, 270]) if mode == 3 else (mode + 1) * 90
+    angle = random.choice([90, 180, 270])
     rotated_image = image.rotate(angle)
     return np.array(rotated_image)
 
-def mirror_image(image_array: np.ndarray, chance: float = 1.0):
-    if chance != 1.0:
-        chance = chance % 1.0
+def mirror_image(image_array: np.ndarray):
     roll = random.random()
     image = Image.fromarray(image_array)
-    if roll <= chance:
+    if roll <= 0.5:
         mirrored_image = ImageOps.mirror(image)
     else:
         mirrored_image = image
@@ -771,3 +685,41 @@ def watershed(img_input):
 
     returnImg = cv2.drawContours(returnImg, objects, -1, color=(0, 0, 255), thickness=2)
     return returnImg
+
+def to_tensor(img: np.ndarray):
+    return torch.from_numpy(img).permute(2, 0, 1)
+
+def img_to_numpy(img):
+    return np.array(img)
+
+class TransformPipeline:
+    def __init__(self, transformations: List[Callable[[np.ndarray], np.ndarray]]):
+        """
+        Initialize the pipeline with a list of transformations.
+
+        Parameters:
+        - transformations: List[Callable[[np.ndarray], np.ndarray]] : A list of functions
+          that take a numpy array as input and return a numpy array.
+        """
+        self.transformations = transformations
+
+    def __call__(self, img: Union[np.ndarray, str]) -> np.ndarray:
+        """Make the object callable."""
+        return self.apply(img)
+
+    def apply(self, img: Union[np.ndarray, str]) -> np.ndarray:
+        """
+        Apply all transformations to the given image.
+
+        Parameters:
+        - img: Union[np.ndarray, str] : The image to transform, can be a numpy array or a file path.
+
+        Returns:
+        - np.ndarray : The transformed image.
+        """
+        if isinstance(img, str):
+            img = img_to_numpy_array(img)
+        for transform in self.transformations:
+            img = transform(img)
+        return img
+

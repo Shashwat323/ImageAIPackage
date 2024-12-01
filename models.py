@@ -5,27 +5,16 @@ from torchvision.models import vit_h_14
 class ImageHead(nn.Module):
     def __init__(self):
         super(ImageHead, self).__init__()
-        self.linear1 = nn.Linear(1280, 640)
-        self.linear2 = nn.Linear(640, 320)
-        self.linear3 = nn.Linear(320, 160)
-        self.linear4 = nn.Linear(160, 80)
-        self.linear5 = nn.Linear(80, 1)
-        self.gelu = nn.GELU()
+        self.linear1 = nn.Linear(4096, 1024)
+        self.linear2 = nn.Linear(1024, 5)
+        self.relu = nn.ReLU()
         self.dropout = nn.Dropout(0.5)
 
     def forward(self, x):
         x = self.linear1(x)
-        x = self.gelu(x)
-        x = self.dropout(x)
+        x = self.relu(x)
         x = self.linear2(x)
-        x = self.gelu(x)
-        x = self.linear3(x)
-        x = self.gelu(x)
-        x = self.linear4(x)
-        x = self.gelu(x)
-        x = self.linear5(x)
-        out = self.gelu(x)
-        return out
+        return x
 
 
 def get_model():
