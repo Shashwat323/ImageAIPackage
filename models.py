@@ -5,8 +5,8 @@ from torchvision.models import vit_h_14
 class ImageHead(nn.Module):
     def __init__(self):
         super(ImageHead, self).__init__()
-        self.linear1 = nn.Linear(4096, 1024)
-        self.linear2 = nn.Linear(1024, 5)
+        self.linear1 = nn.Linear(1280, 640)
+        self.linear2 = nn.Linear(640, 5)
         self.relu = nn.ReLU()
         self.dropout = nn.Dropout(0.5)
 
