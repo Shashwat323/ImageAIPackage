@@ -16,8 +16,7 @@ def train(train_loader, model, loss_fn, optimizer):
     model.train()
     for batch, (X, y) in enumerate(train_loader):
         X = X.to(device)
-        y = torch.stack([torch.as_tensor(i) for i in y], dim=0)
-        y = torch.argmax(y, dim=1).to(device)
+        y = torch.stack([torch.as_tensor(i, dtype=torch.float) for i in y], dim=0).to(device)
 
         # Compute prediction error
         pred = model(X)
@@ -44,8 +43,7 @@ def validate(val_loader, model):
     with torch.no_grad():
         for batch_idx, (X, y) in enumerate(val_loader):
             X = X.to(device)
-            y = torch.stack([torch.as_tensor(i) for i in y], dim=0)
-            y = torch.argmax(y, dim=1).to(device)
+            y = torch.stack([torch.as_tensor(i, dtype=torch.float) for i in y], dim=0).to(device)
 
             pred = model(X)
             pred = torch.argmax(pred, dim=1).to(device)
@@ -73,8 +71,7 @@ def test(test_loader, model):
             X = X.to(device)
 
             # Convert one-hot encoded labels to class indices only if the target is one-hot encoded
-            y = torch.stack([torch.as_tensor(i) for i in y], dim=0)
-            y = torch.argmax(y, dim=1).to(device)
+            y = torch.stack([torch.as_tensor(i, dtype=torch.float) for i in y], dim=0).to(device)
 
             pred = model(X)
 
