@@ -1,6 +1,8 @@
 import os
 from functools import partial
 
+from torchvision import transforms
+
 import imageaipackage as iap
 
 from PIL import Image
@@ -10,7 +12,7 @@ from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
 from torch.utils.data import random_split
 
-resize_to = partial(iap.resize, new_width=64)
+resize_to = partial(iap.resize, new_width=518)
 
 normalize = iap.TransformPipeline([
     iap.img_to_numpy,
@@ -29,12 +31,29 @@ augment = iap.TransformPipeline([
 
 tensor = iap.TransformPipeline([
     iap.normalise,
-    iap.to_tensor
+    transforms.ToTensor(),  # Converts PIL Image or NumPy ndarray to tensor and scales to [0, 1]
+    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])  # Normalize with ImageNet statistics
 ])
+
+def flower_label_to_int(x):
+    match x:
+        case "sunflower":
+            return 0
+        case "dandelion":
+            return 1
+        case "daisy":
+            return 2
+        case "tulip":
+            return 3
+        case "rose":
+            return 4
+        case _:
+            raise ValueError(f"Unknown flower label: {x}")
+
 
 # the original dataset
 class ImageDataset(Dataset):
-    def __init__(self, root_dir, transform=None):
+    def __init__(self, root_dir, transform=None, label_transform=None):
         """
         Args:
             root_dir (string): Directory with all the images organized in subfolders per class.
@@ -44,6 +63,7 @@ class ImageDataset(Dataset):
         self.labels = []
         self.class_to_idx = {}
         self.transform = transform
+        self.label_transform = label_transform
 
         # Traverse the directory to collect image paths and labels
         for idx, class_folder in enumerate(os.listdir(root_dir)):
@@ -68,6 +88,9 @@ class ImageDataset(Dataset):
             image = image.convert('RGB')
 
         label = os.path.basename(os.path.dirname(image_path))
+
+        if self.label_transform:
+            label = self.label_transform(label)
 
         if self.transform:
             image = self.transform(image)
@@ -127,10 +150,10 @@ def train_val_split(dataset):
 
 # get dataloaders
 def get_dataloaders(batch_size=16, root=""):
-    train_val_dataset = ImageDataset(root + '/dataset/train', normalize)
+    train_val_dataset = ImageDataset(root + '/dataset/train', normalize, flower_label_to_int)
     train_val_dataset = AugmentedImageDataset(train_val_dataset, augment)
     train_val_dataset = TransformedImageDataset(train_val_dataset, tensor)
-    test_dataset = ImageDataset(root + '/dataset/test', normalize)
+    test_dataset = ImageDataset(root + '/dataset/test', normalize, flower_label_to_int)
     test_dataset = TransformedImageDataset(test_dataset, tensor)
 
     train_dataset, val_dataset = train_val_split(train_val_dataset)
@@ -143,7 +166,7 @@ def get_dataloaders(batch_size=16, root=""):
 
 # for test
 if __name__ == "__main__":
-    dataset = ImageDataset("D:\\Other\\Repos\\ImageAIPackage\\dataset\\train", transform=normalize)
+    dataset = ImageDataset("D:\\Other\\Repos\\ImageAIPackage\\dataset\\train", transform=normalize, label_transform=flower_label_to_int)
     augmented_dataset = AugmentedImageDataset(dataset, transform=augment)
-    augmented_dataset = TransformedImageDataset(augmented_dataset, transform=tensor)
+    #augmented_dataset = TransformedImageDataset(augmented_dataset, transform=tensor)
     show_sample_image(augmented_dataset)

@@ -686,25 +686,8 @@ def watershed(img_input):
     returnImg = cv2.drawContours(returnImg, objects, -1, color=(0, 0, 255), thickness=2)
     return returnImg
 
-def to_tensor(img: np.ndarray):
-    return torch.from_numpy(img)
-
 def img_to_numpy(img):
     return np.array(img)
-
-def normalise(img: np.ndarray):
-    # Convert image to grayscale
-    gray_image = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-
-    # Normalize grayscale image
-    normalized_gray_image = cv2.normalize(
-        gray_image, None, alpha=0, beta=1, norm_type=cv2.NORM_MINMAX)
-
-    # Convert normalized grayscale image back to color
-    normalized_color_image = cv2.cvtColor(
-        normalized_gray_image, cv2.COLOR_GRAY2BGR)
-
-    return normalized_color_image
 
 class TransformPipeline:
     def __init__(self, transformations: List[Callable[[np.ndarray], np.ndarray]]):
