@@ -126,11 +126,11 @@ def train_val_split(dataset):
 
 
 # get dataloaders
-def get_dataloaders(batch_size=16):
-    train_val_dataset = ImageDataset('../dataset/train', normalize)
+def get_dataloaders(batch_size=16, root=""):
+    train_val_dataset = ImageDataset(root + '/dataset/train', normalize)
     train_val_dataset = AugmentedImageDataset(train_val_dataset, augment)
     train_val_dataset = TransformedImageDataset(train_val_dataset, tensor)
-    test_dataset = ImageDataset('../dataset/test', normalize)
+    test_dataset = ImageDataset(root + '/dataset/test', normalize)
     test_dataset = TransformedImageDataset(test_dataset, tensor)
 
     train_dataset, val_dataset = train_val_split(train_val_dataset)

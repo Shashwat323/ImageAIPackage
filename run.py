@@ -107,7 +107,7 @@ def generate_timestamp_string() -> str:
 
 # helper class for early stopping
 class EarlyStopping:
-    def __init__(self, patience=3, verbose=False, delta=0):
+    def __init__(self, patience=3, verbose=False, delta=0, root = ""):
         self.patience = patience
         self.verbose = verbose
         self.counter = 0
@@ -115,6 +115,7 @@ class EarlyStopping:
         self.early_stop = False
         self.val_loss_min = np.inf
         self.delta = delta
+        self.root = root
 
     def __call__(self, val_loss, model):
 
@@ -136,7 +137,7 @@ class EarlyStopping:
     def save_checkpoint(self, val_loss, model):
         if self.verbose:
             print(f'Validation loss decreased ({self.val_loss_min:.6f} --> {val_loss:.6f}).  Saving model ...')
-        torch.save(model.state_dict(), f'../weights/{generate_timestamp_string()}.pt')  # save checkpoint
+        torch.save(model.state_dict(), self.root + f'/weights/{generate_timestamp_string()}.pt')  # save checkpoint
         self.val_loss_min = val_loss
 
 
@@ -144,12 +145,16 @@ class EarlyStopping:
 if __name__ == "__main__":
     device = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
 
-    train_loader, val_loader, test_loader = get_dataloaders(24)
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--root', type=str, default="", help='set to root directory (where ImageAIPackage is located)')
+    args = parser.parse_args()
+
+    train_loader, val_loader, test_loader = get_dataloaders(24, root=args.root)
     model = get_model().float().to(device)
     loss_fn = nn.MSELoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
     epochs = 10
-    early_stopping = EarlyStopping(patience=3, verbose=True, delta=0)
+    early_stopping = EarlyStopping(patience=3, verbose=True, delta=0, root=args.root)
 
     for t in range(epochs):
         print(f"Epoch {t + 1}\n-------------------------------")
@@ -160,7 +165,7 @@ if __name__ == "__main__":
         if early_stopping.early_stop:
             print("Early stopping")
             break
-    model.load_state_dict(torch.load(f'../weights/{generate_timestamp_string()}.pt'))
+    model.load_state_dict(torch.load(args.root + f'/weights/{generate_timestamp_string()}.pt'))
     test(test_loader, model)
 
     print("Done!")
