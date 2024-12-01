@@ -6,7 +6,7 @@ class ImageHead(nn.Module):
     def __init__(self):
         super(ImageHead, self).__init__()
         self.linear1 = nn.Linear(1280, 640)
-        self.linear2 = nn.Linear(640, 5)
+        self.linear2 = nn.Linear(640, 1)
         self.relu = nn.ReLU()
         self.dropout = nn.Dropout(0.5)
 
