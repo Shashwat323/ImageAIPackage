@@ -35,19 +35,18 @@ tensor = iap.TransformPipeline([
 ])
 
 def flower_label_to_int(x):
-    match x:
-        case "sunflower":
-            return 0
-        case "dandelion":
-            return 1
-        case "daisy":
-            return 2
-        case "tulip":
-            return 3
-        case "rose":
-            return 4
-        case _:
-            raise ValueError(f"Unknown flower label: {x}")
+    classes = ["sunflower", "dandelion", "daisy", "tulip", "rose"]
+
+    # Create a zero vector with length equal to the number of classes
+    one_hot_vector = [0] * len(classes)
+
+    if x in classes:
+        # Set the index corresponding to the class to 1
+        one_hot_vector[classes.index(x)] = 1
+    else:
+        raise ValueError(f"Unknown flower label: {x}")
+
+    return one_hot_vector
 
 
 # the original dataset
