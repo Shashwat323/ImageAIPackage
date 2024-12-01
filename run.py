@@ -16,11 +16,11 @@ def train(train_loader, model, loss_fn, optimizer):
     model.train()
     for batch, (X, y) in enumerate(train_loader):
         X = X.to(device)
-        y = y.to(device)
+        y = torch.stack([torch.as_tensor(i) for i in y], dim=0)
+        y = torch.argmax(y, dim=1).to(device)
 
         # Compute prediction error
         pred = model(X)
-        y = y.unsqueeze(1).float()
         loss = loss_fn(pred, y)
 
         # Backpropagation
@@ -40,30 +40,27 @@ def validate(val_loader, model):
 
     # Validation
     model.eval()
-    val_loss_mse = 0
     val_loss_mae = 0
     with torch.no_grad():
         for batch_idx, (X, y) in enumerate(val_loader):
             X = X.to(device)
-            y = y.to(device)
+            y = torch.stack([torch.as_tensor(i) for i in y], dim=0)
+            y = torch.argmax(y, dim=1).to(device)
 
             pred = model(X)
-            y = y.unsqueeze(1)
+            pred = torch.argmax(pred, dim=1).to(device)
 
-            loss_mse = nn.MSELoss()(pred, y)
-            val_loss_mse += loss_mse.item()
             loss_mae = nn.L1Loss()(pred, y)
             val_loss_mae += loss_mae.item()
 
-    val_loss_mse /= len(val_loader)
     val_loss_mae /= len(val_loader)
 
-    print(f"val mse loss: {val_loss_mse:>7f}, val mae loss: {val_loss_mae}")
+    print(f"val mae loss: {val_loss_mae}")
     return val_loss_mae
 
 
 
-# test and return mse and mae loss
+# Test and return MSE and MAE loss
 def test(test_loader, model):
     device = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
 
@@ -74,20 +71,25 @@ def test(test_loader, model):
     with torch.no_grad():
         for batch_idx, (X, y) in enumerate(test_loader):
             X = X.to(device)
-            y = y.to(device)
+
+            # Convert one-hot encoded labels to class indices only if the target is one-hot encoded
+            y = torch.stack([torch.as_tensor(i) for i in y], dim=0)
+            y = torch.argmax(y, dim=1).to(device)
 
             pred = model(X)
-            y = y.unsqueeze(1)
 
-            loss_mse = nn.MSELoss()(pred, y)
+            # Ensure compatibility for loss calculation
+            pred = torch.argmax(pred, dim=1)
+
+            loss_mse = nn.MSELoss()(pred.float(), y.float())
             test_loss_mse += loss_mse.item()
-            loss_mae = nn.L1Loss()(pred, y)
+            loss_mae = nn.L1Loss()(pred.float(), y.float())
             test_loss_mae += loss_mae.item()
 
     test_loss_mse /= len(test_loader)
     test_loss_mae /= len(test_loader)
 
-    print(f"test mse loss: {test_loss_mse:>7f}, test mae loss: {test_loss_mae}")
+    print(f"test mse loss: {test_loss_mse:>7f}, test mae loss: {test_loss_mae:>7f}")
     return test_loss_mse, test_loss_mae
 
 def generate_timestamp_string() -> str:
