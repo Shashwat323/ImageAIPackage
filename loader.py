@@ -12,6 +12,12 @@ from torch.utils.data import random_split
 
 resize_to = partial(iap.resize, new_width=64)
 
+normalize = iap.TransformPipeline([
+    iap.img_to_numpy,
+    iap.crop,
+    resize_to
+])
+
 augment = iap.TransformPipeline([
     iap.img_to_numpy,
     iap.mirror_image,
@@ -21,10 +27,9 @@ augment = iap.TransformPipeline([
     iap.square_rotate
 ])
 
-normalize = iap.TransformPipeline([
-    iap.img_to_numpy,
-    iap.crop,
-    resize_to
+tensor = iap.TransformPipeline([
+    iap.normalise,
+    iap.to_tensor
 ])
 
 # the original dataset
@@ -86,6 +91,18 @@ class AugmentedImageDataset(Dataset):
 
         return image, y
 
+class TransformedImageDataset(Dataset):
+    def __init__(self, original_dataset, transform = None):
+        self.original_dataset = original_dataset
+        self.transform = transform
+
+    def __len__(self):
+        return len(self.original_dataset)
+
+    def __getitem__(self, idx):
+        image, y = self.original_dataset[idx]
+        image = self.transform(image)
+        return image, y
 
 # show 5 sample images
 def show_sample_image(dataset):
@@ -112,7 +129,9 @@ def train_val_split(dataset):
 def get_dataloaders(batch_size=16):
     train_val_dataset = ImageDataset('../dataset/train', normalize)
     train_val_dataset = AugmentedImageDataset(train_val_dataset, augment)
+    train_val_dataset = TransformedImageDataset(train_val_dataset, tensor)
     test_dataset = ImageDataset('../dataset/test', normalize)
+    test_dataset = TransformedImageDataset(test_dataset, tensor)
 
     train_dataset, val_dataset = train_val_split(train_val_dataset)
 
@@ -126,4 +145,5 @@ def get_dataloaders(batch_size=16):
 if __name__ == "__main__":
     dataset = ImageDataset("D:\\Other\\Repos\\ImageAIPackage\\dataset\\train", transform=normalize)
     augmented_dataset = AugmentedImageDataset(dataset, transform=augment)
+    augmented_dataset = TransformedImageDataset(augmented_dataset, transform=tensor)
     show_sample_image(augmented_dataset)
