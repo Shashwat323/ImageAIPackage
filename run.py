@@ -149,7 +149,7 @@ if __name__ == "__main__":
     parser.add_argument('--root', type=str, default="", help='set to root directory (where ImageAIPackage is located)')
     args = parser.parse_args()
 
-    train_loader, val_loader, test_loader = get_dataloaders(24, root=args.root)
+    train_loader, val_loader, test_loader = get_dataloaders(64, root=args.root)
     model = get_model().float().to(device)
     loss_fn = nn.MSELoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
