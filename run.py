@@ -16,7 +16,7 @@ def train(train_loader, model, loss_fn, optimizer):
     model.train()
     for batch, (X, y) in enumerate(train_loader):
         X = X.to(device)
-        y = torch.stack([torch.as_tensor(i, dtype=torch.float) for i in y], dim=0).to(device)
+        y = torch.tensor(y, dtype=torch.long).to(device)
 
         # Compute prediction error
         pred = model(X)
@@ -43,12 +43,11 @@ def validate(val_loader, model):
     with torch.no_grad():
         for batch_idx, (X, y) in enumerate(val_loader):
             X = X.to(device)
-            y = torch.stack([torch.as_tensor(i, dtype=torch.float) for i in y], dim=0).to(device)
+            y = torch.tensor(y, dtype=torch.long).to(device)
 
             pred = model(X)
-            pred = torch.argmax(pred, dim=1).to(device)
 
-            loss_mae = nn.L1Loss()(pred, y)
+            loss_mae = nn.L1Loss()(torch.argmax(pred, dim=1).float(), y.float())
             val_loss_mae += loss_mae.item()
 
     val_loss_mae /= len(val_loader)
@@ -69,18 +68,13 @@ def test(test_loader, model):
     with torch.no_grad():
         for batch_idx, (X, y) in enumerate(test_loader):
             X = X.to(device)
-
-            # Convert one-hot encoded labels to class indices only if the target is one-hot encoded
-            y = torch.stack([torch.as_tensor(i, dtype=torch.float) for i in y], dim=0).to(device)
+            y = torch.tensor(y, dtype=torch.long).to(device)
 
             pred = model(X)
 
-            # Ensure compatibility for loss calculation
-            pred = torch.argmax(pred, dim=1)
-
-            loss_mse = nn.MSELoss()(pred.float(), y.float())
+            loss_mse = nn.MSELoss()(torch.argmax(pred, dim=1).float(), y.float())
             test_loss_mse += loss_mse.item()
-            loss_mae = nn.L1Loss()(pred.float(), y.float())
+            loss_mae = nn.L1Loss()(torch.argmax(pred, dim=1).float(), y.float())
             test_loss_mae += loss_mae.item()
 
     test_loss_mse /= len(test_loader)
@@ -150,7 +144,7 @@ if __name__ == "__main__":
 
     train_loader, val_loader, test_loader = get_dataloaders(64, root=args.root)
     model = get_model().float().to(device)
-    loss_fn = nn.MSELoss()
+    loss_fn = nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
     epochs = 10
     early_stopping = EarlyStopping(patience=3, verbose=True, delta=0, root=args.root)

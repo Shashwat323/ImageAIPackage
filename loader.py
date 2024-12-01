@@ -34,19 +34,14 @@ tensor = iap.TransformPipeline([
     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])  # Normalize with ImageNet statistics
 ])
 
-def flower_label_to_int(x):
+def flower_label_to_index(x):
     classes = ["sunflower", "dandelion", "daisy", "tulip", "rose"]
 
-    # Create a zero vector with length equal to the number of classes
-    one_hot_vector = [0] * len(classes)
-
     if x in classes:
-        # Set the index corresponding to the class to 1
-        one_hot_vector[classes.index(x)] = 1
+        # Return the index of the class
+        return classes.index(x)
     else:
         raise ValueError(f"Unknown flower label: {x}")
-
-    return one_hot_vector
 
 
 # the original dataset
@@ -148,10 +143,10 @@ def train_val_split(dataset):
 
 # get dataloaders
 def get_dataloaders(batch_size=16, root=""):
-    train_val_dataset = ImageDataset(root + '/dataset/train', normalize, flower_label_to_int)
+    train_val_dataset = ImageDataset(root + '/dataset/train', normalize, flower_label_to_index)
     train_val_dataset = AugmentedImageDataset(train_val_dataset, augment)
     train_val_dataset = TransformedImageDataset(train_val_dataset, tensor)
-    test_dataset = ImageDataset(root + '/dataset/test', normalize, flower_label_to_int)
+    test_dataset = ImageDataset(root + '/dataset/test', normalize, flower_label_to_index)
     test_dataset = TransformedImageDataset(test_dataset, tensor)
 
     train_dataset, val_dataset = train_val_split(train_val_dataset)
@@ -164,7 +159,7 @@ def get_dataloaders(batch_size=16, root=""):
 
 # for test
 if __name__ == "__main__":
-    dataset = ImageDataset("D:\\Other\\Repos\\ImageAIPackage\\dataset\\train", transform=normalize, label_transform=flower_label_to_int)
+    dataset = ImageDataset("D:\\Other\\Repos\\ImageAIPackage\\dataset\\train", transform=normalize, label_transform=flower_label_to_index)
     augmented_dataset = AugmentedImageDataset(dataset, transform=augment)
     augmented_dataset = TransformedImageDataset(augmented_dataset, transform=tensor)
     show_sample_image(augmented_dataset)
