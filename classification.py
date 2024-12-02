@@ -108,8 +108,8 @@ device = 'cuda' if torch.cuda.is_available() else 'cpu'
 batch_size = 64
 img_channels = 3
 num_classes = 10
-start_lr = 1
-num_epochs = 30
+start_lr = 0.1
+num_epochs = 50
 model_save_path = 'resnet50_cifar10.pth'
 
 # Load the dataset
