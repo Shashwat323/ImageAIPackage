@@ -112,8 +112,11 @@ start_lr = 0.1
 num_epochs = 50
 model_save_path = 'resnet101_cifar10.pth'
 
+transform = transforms.Compose([
+    transforms.ToTensor(),  # Convert PIL image or numpy.ndarray to tensor
+    transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))  # Normalize image data
+])
 # Load the dataset
-transform = transforms.Compose([transforms.ToTensor()])
 train_dataset = datasets.CIFAR10(root='/root/RESNET/dataSet', train=True, download=True, transform=transform)
 valid_dataset = datasets.CIFAR10(root='/root/RESNET/dataSet', train=False, download=False, transform=transform)
 
