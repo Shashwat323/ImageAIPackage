@@ -43,6 +43,14 @@ def flower_label_to_index(x):
     else:
         raise ValueError(f"Unknown flower label: {x}")
 
+def flower_index_to_label(index):
+    classes = ["sunflower", "dandelion", "daisy", "tulip", "rose"]
+
+    if 0 <= index < len(classes):
+        # Return the class corresponding to the index
+        return classes[index]
+    else:
+        raise IndexError(f"Index out of range: {index}")
 
 # the original dataset
 class ImageDataset(Dataset):
