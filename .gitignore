@@ -1,0 +1,3 @@
+/dataset/
+weights/*
+!weights/weights.txt

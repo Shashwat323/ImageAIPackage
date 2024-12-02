@@ -2,136 +2,83 @@ import cv2
 import itertools
 import numpy as np
 import random
+
+from typing import Callable, List, Union
+import torch
 from PIL import Image, ImageOps, ImageEnhance
 import os
+from PIL import Image, ImageEnhance, ImageOps
+import numpy as np
+import random
 
-
-def overlay_images(image_path: str, overlay_path: str, transparency: float = 1.0):
+def overlay_images(base_image_array: np.ndarray, overlay_image_array: np.ndarray, transparency: float = 1.0):
     if not (0.0 <= transparency <= 1.0):
         raise ValueError('Transparency must be between 0.0 and 1.0')
-    base_image = Image.open(image_path).convert('RGBA')
-    overlay_image = Image.open(image_path).convert('RGBA')
+    base_image = Image.fromarray(base_image_array).convert('RGBA')
+    overlay_image = Image.fromarray(overlay_image_array).convert('RGBA')
     if base_image.size != overlay_image.size:
         raise ValueError('Base image and overlay image must be the same size')
     overlay_image = Image.blend(Image.new("RGBA", overlay_image.size, (0, 0, 0, 0)), overlay_image, transparency)
     result = Image.alpha_composite(base_image, overlay_image)
     return np.array(result)
 
-
-def adjust_contrast(image_file_path: str, factor: float = 1.0, chance: float = 1.0):
-    if not (0 <= chance <= 1.0):
-        raise ValueError('Chance must be between 0.0 and 1.0')
-    if factor < 0:
-        raise ValueError('Factor must be > 0')
-    image = Image.open(image_file_path)
-    if random.random() > chance:
-        return np.array(image)
+def adjust_contrast(image_array: np.ndarray, mini: float = 0.5, maxi: float = 1.5):
+    image = Image.fromarray(image_array)
     enhancer = ImageEnhance.Contrast(image)
-    enhanced_image = enhancer.enhance(factor)
+    enhanced_image = enhancer.enhance(random.uniform(mini, maxi))
     return np.array(enhanced_image)
 
-
-def adjust_hue(image_file_path: str, factor: float = 1.0, chance: float = 1.0):
-    if not (0 <= chance <= 1.0):
-        raise ValueError('Chance must be between 0.0 and 1.0')
-    if factor < 0:
-        raise ValueError('Factor must be > 0')
-    image = Image.open(image_file_path)
-    if random.random() > chance:
-        return np.array(image)
-    hsv_image = image.convert("HSV")
-    hsv_array = np.array(hsv_image)
-    # print(hsv_array.shape)  # 500=height, 600=width, 3=channels of HSV
+def adjust_hue(image_array: np.ndarray, mini: float = 0.7, maxi: float = 1.3):
+    image = Image.fromarray(image_array).convert("HSV")
+    hsv_array = np.array(image)
     for i in range(hsv_array.shape[0]):  # height
         for j in range(hsv_array.shape[1]):  # width
             h, s, v = hsv_array[i, j]  # get hue, saturation, value
             h = int(h)
-            # h is an 8 bit integer holding val's between 0-255. Convert to int.
-            h = (h * factor) % 255
-            # hue is measured in degrees so it wraps around thus we use %
-            hsv_array[i, j] = [h, s, v]  # update the pixel
+            h = (h * random.uniform(mini, maxi)) % 255
+            hsv_array[i, j] = [h, s, v]
     adjusted_image = Image.fromarray(hsv_array, mode="HSV").convert("RGB")
-    # converts an HSV array back to an RGB image using PIL library
     return np.array(adjusted_image)
 
-
-def adjust_brightness(image_file_path: str, factor: int = 1.0, chance: float = 1.0):
-    if not (0 <= chance <= 1.0):
-        raise ValueError('Chance must be between 0.0 and 1.0')
-    if factor < 0:
-        raise ValueError('Factor must be > 0')
-        image = Image.open(image_file_path)
-    if random.random() > chance:
-        return np.array(image)
+def adjust_brightness(image_array: np.ndarray, mini: float = 0.7, maxi: float = 1.3):
+    image = Image.fromarray(image_array)
     enhancer = ImageEnhance.Brightness(image)
-    enhanced_image = enhancer.enhance(factor)
+    enhanced_image = enhancer.enhance(random.uniform(mini, maxi))
     return np.array(enhanced_image)
 
-
-def square_rotate(image_file_path: str, mode: int = 0, chance: float = 1.0):
-    if not (0 <= chance <= 1.0):
-        raise ValueError('Chance must be between 0.0 and 1.0')
-    if mode not in {0, 1, 2, 3}:
-        raise ValueError('Mode must be 0, 1, 2, or 3')
-    image = Image.open(image_file_path)
-    if random.random() > chance:
-        return np.array(image)
-    angle = random.choice([90, 180, 270]) if mode == 3 else (mode + 1) * 90
+def square_rotate(image_array: np.ndarray):
+    image = Image.fromarray(image_array)
+    angle = random.choice([90, 180, 270])
     rotated_image = image.rotate(angle)
     return np.array(rotated_image)
 
-
-def mirror_image(image_file_path: str, chance: float = 1.0):
-    if chance != 1.0:
-        chance = chance % 1.0
+def mirror_image(image_array: np.ndarray):
     roll = random.random()
-    image = Image.open(image_file_path)
-    if (roll <= chance):
+    image = Image.fromarray(image_array)
+    if roll <= 0.5:
         mirrored_image = ImageOps.mirror(image)
     else:
         mirrored_image = image
-    # mirrored_image.show() #for testing purposes
     return np.array(mirrored_image)
 
-
-def random_rotate(image_file_path: str):
+def random_rotate(image_array: np.ndarray):
     angle = random.randint(0, 360)
-    image = Image.open(image_file_path)
+    image = Image.fromarray(image_array)
     rotated_image = image.rotate(angle, expand=True, fillcolor=(0, 255, 0))
-    rotated_image.show()
     return np.array(rotated_image)
 
-
-def random_crop(image_file_path: str):
-    image = Image.open(image_file_path)
+def random_crop(image_array: np.ndarray):
+    image = Image.fromarray(image_array)
     width, height = image.size
     smallest_edge = width if width < height else height
     x_min = random.randint(0, width - smallest_edge) if width > smallest_edge else 0
     y_min = random.randint(0, height - smallest_edge) if height > smallest_edge else 0
     box = (x_min, y_min, x_min + smallest_edge, y_min + smallest_edge)
     cropped_image = image.crop(box)
-    # print(x_min) this code is to ensure randint() is working correctly
-    # print(y_min) this code is to ensure randint() is working correctly
-    cropped_image_array = np.array(cropped_image)
-    # cropped_image.show()
-    return cropped_image_array
+    return np.array(cropped_image)
 
-
-def gray_scale(image_file_path: str, mode: int = 1):
-    """
-    Convert an image to grayscale.
-
-    Parameters:
-    - image_file_path: str : Path to the image file.
-    - mode: int :
-        - 1: Gray scale 0-255
-        - 2: 8-bit gray scale
-        - 3: Black and white
-
-    Returns:
-    - Image object : The gray scaled image.
-    """
-    image = Image.open(image_file_path)
+def gray_scale(image_array: np.ndarray, mode: int = 1):
+    image = Image.fromarray(image_array)
     if mode == 1:
         gray_scaled_image = image.convert('L')
     elif mode == 2:
@@ -140,9 +87,8 @@ def gray_scale(image_file_path: str, mode: int = 1):
     elif mode == 3:
         gray_scaled_image = image.convert('1')
     else:
-        raise ValueError("incorrect mode for gray_scale function != 1, 2, or 3")
-    gray_scaled_image_array = np.array(gray_scaled_image)
-    return gray_scaled_image_array
+        raise ValueError("Mode must be 1, 2, or 3")
+    return np.array(gray_scaled_image)
 
 
 def save_image(img: np.ndarray, output_file_path: str) -> None:
@@ -739,3 +685,38 @@ def watershed(img_input):
 
     returnImg = cv2.drawContours(returnImg, objects, -1, color=(0, 0, 255), thickness=2)
     return returnImg
+
+def img_to_numpy(img):
+    return np.array(img)
+
+class TransformPipeline:
+    def __init__(self, transformations: List[Callable[[np.ndarray], np.ndarray]]):
+        """
+        Initialize the pipeline with a list of transformations.
+
+        Parameters:
+        - transformations: List[Callable[[np.ndarray], np.ndarray]] : A list of functions
+          that take a numpy array as input and return a numpy array.
+        """
+        self.transformations = transformations
+
+    def __call__(self, img: Union[np.ndarray, str]) -> np.ndarray:
+        """Make the object callable."""
+        return self.apply(img)
+
+    def apply(self, img: Union[np.ndarray, str]) -> np.ndarray:
+        """
+        Apply all transformations to the given image.
+
+        Parameters:
+        - img: Union[np.ndarray, str] : The image to transform, can be a numpy array or a file path.
+
+        Returns:
+        - np.ndarray : The transformed image.
+        """
+        if isinstance(img, str):
+            img = img_to_numpy_array(img)
+        for transform in self.transformations:
+            img = transform(img)
+        return img
+
