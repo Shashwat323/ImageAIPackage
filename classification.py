@@ -190,7 +190,7 @@ def validate(model, device, loader, loss_fn):
 
 # Main training loop
 if __name__ == "__main__":
-    model = ResNet101(img_channels, num_classes)
+    model = ResNet101(img_channels, num_classes).to(device)
     #model = resnet(block, [3, 4, 6, 3], img_channels, num_classes)
     optimizer = optim.Adam(model.parameters(), lr=start_lr)
     loss_fn = nn.CrossEntropyLoss()
