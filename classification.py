@@ -110,7 +110,7 @@ img_channels = 3
 num_classes = 10
 start_lr = 0.1
 num_epochs = 50
-model_save_path = 'resnet50_cifar10.pth'
+model_save_path = 'resnet101_cifar10.pth'
 
 # Load the dataset
 transform = transforms.Compose([transforms.ToTensor()])
@@ -178,6 +178,7 @@ def validate(model, device, loader, loss_fn):
 
             # Accuracy calculation
             _, predicted = torch.max(y_hat.data, 1)
+
             total += y.size(0)
             correct += (predicted == y).sum().item()
 
@@ -190,7 +191,7 @@ def validate(model, device, loader, loss_fn):
 
 # Main training loop
 if __name__ == "__main__":
-    model = ResNet50(img_channels, num_classes).to(device)
+    model = ResNet101(img_channels, num_classes)#.to(device)
     optimizer = optim.Adam(model.parameters(), lr=start_lr)
     loss_fn = nn.CrossEntropyLoss()
 
