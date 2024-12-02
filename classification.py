@@ -24,7 +24,7 @@ class block(nn.Module):
         self.stride = stride
 
     def forward(self, x):
-        identity = x.clone()
+        identity = x
         x = self.conv1(x)
         x = self.bn1(x)
         x = self.relu(x)
@@ -45,7 +45,7 @@ class resnet(nn.Module):
         super(resnet, self).__init__()
         self.in_channels = 64
 
-        self.conv = nn.Conv2d(image_channels, 64, kernel_size=7, stride=2, padding=3)
+        self.conv = nn.Conv2d(image_channels, 64, kernel_size=7, stride=2, padding=3, bias=False)
         self.bn = nn.BatchNorm2d(64)
         self.relu = nn.ReLU()
         self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
@@ -108,9 +108,9 @@ device = 'cuda' if torch.cuda.is_available() else 'cpu'
 batch_size = 64
 img_channels = 3
 num_classes = 10
-start_lr = 0.1
+start_lr = 1
 num_epochs = 30
-model_save_path = 'resnet101_cifar10.pth'
+model_save_path = 'resnet50_cifar10.pth'
 
 # Load the dataset
 transform = transforms.Compose([transforms.ToTensor()])
@@ -190,8 +190,7 @@ def validate(model, device, loader, loss_fn):
 
 # Main training loop
 if __name__ == "__main__":
-    model = ResNet101(img_channels, num_classes).to(device)
-    #model = resnet(block, [3, 4, 6, 3], img_channels, num_classes)
+    model = ResNet50(img_channels, num_classes).to(device)
     optimizer = optim.Adam(model.parameters(), lr=start_lr)
     loss_fn = nn.CrossEntropyLoss()
 
