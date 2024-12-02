@@ -54,11 +54,11 @@ class resnet(nn.Module):
         #conv2
         self.layer1 = self.make_layer(block, layers[0], out_channels=64, stride=1)
         #conv3
-        self.layer2 = self.make_layer(block, layers[1], out_channels=128, stride=2)
+        self.layer2 = self.make_layer(block, layers[1], out_channels=128, stride=1)
         #conv4
-        self.layer3 = self.make_layer(block, layers[2], out_channels=256, stride=2)
+        self.layer3 = self.make_layer(block, layers[2], out_channels=256, stride=1)
         #conv5
-        self.layer4 = self.make_layer(block, layers[3], out_channels=512, stride=2)
+        self.layer4 = self.make_layer(block, layers[3], out_channels=512, stride=1)
 
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
         self.fc = nn.Linear(512*4, num_classes)
