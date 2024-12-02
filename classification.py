@@ -105,7 +105,7 @@ def ResNet152(img_channels=3, num_classes=1000):
     return resnet(block, [3, 8, 36, 3], img_channels, num_classes)
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
-batch_size = 64
+batch_size = 256
 img_channels = 3
 num_classes = 10
 start_lr = 0.1
