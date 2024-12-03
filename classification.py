@@ -17,7 +17,7 @@ img_channels = 3
 num_classes = 10
 start_lr = 1
 num_epochs = 30
-model_save_path = 'resnet101_cifar10.pth'
+model_save_path = 'resnet50_cifar10.pth'
 
 train_dataset = datasets.CIFAR10(root='/root/RESNET/dataSet', train=True, download=True)
 train_dataset = loader.AugmentedImageDataset(train_dataset, loader.augment_cnn)
@@ -99,7 +99,7 @@ def validate(model, device, loader, loss_fn):
 
 # Main training loop
 if __name__ == "__main__":
-    model = models.ResNet101(img_channels, num_classes).to(device)
+    model = models.ResNet50(img_channels, num_classes).to(device)
     optimizer = optim.Adam(model.parameters(), lr=start_lr)
     loss_fn = nn.CrossEntropyLoss()
 
