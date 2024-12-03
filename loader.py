@@ -31,9 +31,6 @@ augment = iap.TransformPipeline([
 
 augment_cnn = iap.TransformPipeline([
     iap.img_to_numpy,
-    iap.adjust_brightness,
-    iap.adjust_contrast,
-    iap.adjust_hue,
     iap.gaussian_blur,
     iap.sharpen,
     iap.square_rotate
