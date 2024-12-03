@@ -106,11 +106,11 @@ def ResNet152(img_channels=3, num_classes=1000):
     return resnet(block, [3, 8, 36, 3], img_channels, num_classes)
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
-batch_size = 64
+batch_size = 128
 img_channels = 3
 num_classes = 10
 start_lr = 0.1
-num_epochs = 50
+num_epochs = 30
 model_save_path = 'resnet101_cifar10.pth'
 
 train_dataset = datasets.CIFAR10(root='/root/RESNET/dataSet', train=True, download=True)
