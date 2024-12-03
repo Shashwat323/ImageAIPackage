@@ -15,12 +15,12 @@ device = 'cuda' if torch.cuda.is_available() else 'cpu'
 batch_size = 64
 img_channels = 3
 num_classes = 10
-start_lr = 0.1
+start_lr = 1
 num_epochs = 30
 model_save_path = 'resnet101_cifar10.pth'
 
 train_dataset = datasets.CIFAR10(root='/root/RESNET/dataSet', train=True, download=True)
-#train_dataset = loader.AugmentedImageDataset(train_dataset, loader.augment_cnn)
+train_dataset = loader.AugmentedImageDataset(train_dataset, loader.augment_cnn)
 train_dataset = loader.TransformedImageDataset(train_dataset, loader.tensor)
 valid_dataset = datasets.CIFAR10(root='/root/RESNET/dataSet', train=False, download=False)
 valid_dataset = loader.TransformedImageDataset(valid_dataset, loader.tensor)
@@ -100,7 +100,7 @@ def validate(model, device, loader, loss_fn):
 # Main training loop
 if __name__ == "__main__":
     model = models.ResNet101(img_channels, num_classes).to(device)
-    optimizer = optim.SGD(model.parameters(), lr=start_lr, momentum=0.9)
+    optimizer = optim.Adam(model.parameters(), lr=start_lr)
     loss_fn = nn.CrossEntropyLoss()
 
     train_losses = []
@@ -127,32 +127,3 @@ if __name__ == "__main__":
     torch.save(model.state_dict(), model_save_path)
     print(f"Model saved to {model_save_path}")
 
-    # Save the trained model
-    #torch.save(model.state_dict(), model_save_path)
-    #print(f"Model saved to {model_save_path}")
-
-    # Plotting training and validation loss
-    plt.figure(figsize=(15, 5))
-
-    plt.subplot(1, 2, 1)
-    plt.plot(range(1, num_epochs + 1), train_losses, label='Training Loss')
-    plt.plot(range(1, num_epochs + 1), valid_losses, label='Validation Loss')
-    plt.xlabel('Epoch')
-    plt.ylabel('Loss')
-    plt.title('Training and Validation Loss Over Epochs')
-    plt.legend()
-
-    # Plotting training and validation accuracy
-    plt.subplot(1, 2, 2)
-    plt.plot(range(1, num_epochs + 1), train_accuracies, label='Training Accuracy')
-    plt.plot(range(1, num_epochs + 1), valid_accuracies, label='Validation Accuracy')
-    plt.xlabel('Epoch')
-    plt.ylabel('Accuracy (%)')
-    plt.title('Training and Validation Accuracy Over Epochs')
-    plt.legend()
-
-    # Save the plots
-    plt.savefig('training_validation_plots.png')
-    print("Training and validation plots saved as 'training_validation_plots.png'")
-
-    plt.show()
