@@ -1,12 +1,12 @@
 import torch
 import torch.optim as optim
 import torch.nn as nn
-import torchvision.datasets as datasets
+from torchvision.datasets import CIFAR10
 import torchvision.transforms as transforms
 import torch.utils.data as data
 import matplotlib.pyplot as plt
 from tqdm import tqdm
-#import loader
+import loader
 import models
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -22,9 +22,8 @@ transform = transforms.Compose([
     transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))  # Normalize image data
 ])
 
-train_dataset = datasets.CIFAR10(root='/root/RESNET/dataSet', train=True, download=True, transform=transform)
-valid_dataset = datasets.CIFAR10(root='/root/RESNET/dataSet', train=False, download=False, transform=transform)
-
+train_dataset = CIFAR10(root='/root/RESNET/dataSet', train=True, download=True, transform=loader.tensor)
+valid_dataset = CIFAR10(root='/root/RESNET/dataSet', train=False, download=False, transform=loader.tensor)
 train_loader = data.DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
 valid_loader = data.DataLoader(valid_dataset, batch_size=batch_size, shuffle=False)
 
