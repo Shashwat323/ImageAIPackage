@@ -100,7 +100,7 @@ def validate(model, device, loader, loss_fn):
 # Main training loop
 if __name__ == "__main__":
     model = models.ResNet101(img_channels, num_classes).to(device)
-    optimizer = optim.Adam(model.parameters(), lr=start_lr)
+    optimizer = optim.SGD(model.parameters(), lr=start_lr, momentum=0.9)
     loss_fn = nn.CrossEntropyLoss()
 
     train_losses = []
