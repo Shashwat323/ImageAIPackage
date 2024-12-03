@@ -143,7 +143,6 @@ class FPN(nn.Module):
 
         return P2, P3, P4, P5, P6
 
-
 def ResNet50(img_channels=3, num_classes=1000):
     return resnet(block, [3, 4, 6, 3], img_channels, num_classes)
 
