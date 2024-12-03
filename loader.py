@@ -29,6 +29,16 @@ augment = iap.TransformPipeline([
     iap.square_rotate
 ])
 
+augment_cnn = iap.TransformPipeline([
+    iap.img_to_numpy,
+    iap.adjust_brightness,
+    iap.adjust_contrast,
+    iap.adjust_hue,
+    iap.gaussian_blur,
+    iap.sharpen,
+    iap.square_rotate
+])
+
 tensor = iap.TransformPipeline([
     transforms.ToTensor(),  # Converts PIL Image or NumPy ndarray to tensor and scales to [0, 1]
     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])  # Normalize with ImageNet statistics
