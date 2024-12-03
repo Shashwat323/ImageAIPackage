@@ -12,7 +12,7 @@ import loader
 import models
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
-batch_size = 128
+batch_size = 64
 img_channels = 3
 num_classes = 10
 start_lr = 0.1
