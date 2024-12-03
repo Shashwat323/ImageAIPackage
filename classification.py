@@ -8,6 +8,7 @@ import torchvision.transforms as transforms
 import torch.utils.data as data
 import matplotlib.pyplot as plt
 from tqdm import tqdm
+import loader
 
 class block(nn.Module):
     def __init__(self, in_channels, out_channels, identity_downsample=None, stride=1):
@@ -112,13 +113,11 @@ start_lr = 0.1
 num_epochs = 50
 model_save_path = 'resnet101_cifar10.pth'
 
-transform = transforms.Compose([
-    transforms.ToTensor(),  # Convert PIL image or numpy.ndarray to tensor
-    transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))  # Normalize image data
-])
-# Load the dataset
-train_dataset = datasets.CIFAR10(root='/root/RESNET/dataSet', train=True, download=True, transform=transform)
-valid_dataset = datasets.CIFAR10(root='/root/RESNET/dataSet', train=False, download=False, transform=transform)
+train_dataset = datasets.CIFAR10(root='/root/RESNET/dataSet', train=True, download=True)
+train_dataset = loader.AugmentedImageDataset(train_dataset, loader.augment)
+train_dataset = loader.TransformedImageDataset(train_dataset, loader.tensor)
+valid_dataset = datasets.CIFAR10(root='/root/RESNET/dataSet', train=False, download=False)
+valid_dataset = loader.TransformedImageDataset(valid_dataset, loader.tensor)
 
 train_loader = data.DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
 valid_loader = data.DataLoader(valid_dataset, batch_size=batch_size, shuffle=False)
@@ -217,6 +216,7 @@ if __name__ == "__main__":
             if train_loss >= (sum(train_losses[-3:]) / 3):
                 start_lr /= 10
                 update_lr(optimizer, start_lr)
+
 
     torch.save(model.state_dict(), model_save_path)
     print(f"Model saved to {model_save_path}")
