@@ -19,11 +19,9 @@ start_lr = 1
 num_epochs = 30
 model_save_path = 'resnet50_cifar10.pth'
 
-train_dataset = datasets.CIFAR10(root='/root/RESNET/dataSet', train=True, download=True)
-train_dataset = loader.AugmentedImageDataset(train_dataset, loader.augment_cnn)
-train_dataset = loader.TransformedImageDataset(train_dataset, loader.tensor)
-valid_dataset = datasets.CIFAR10(root='/root/RESNET/dataSet', train=False, download=False)
-valid_dataset = loader.TransformedImageDataset(valid_dataset, loader.tensor)
+train_dataset = datasets.CIFAR10(root='/root/RESNET/dataSet', train=True, download=True, transform=loader.tensor)
+valid_dataset = datasets.CIFAR10(root='/root/RESNET/dataSet', train=False, download=False, transform=loader.tensor)
+
 
 train_loader = data.DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
 valid_loader = data.DataLoader(valid_dataset, batch_size=batch_size, shuffle=False)
