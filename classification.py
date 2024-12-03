@@ -15,9 +15,9 @@ device = 'cuda' if torch.cuda.is_available() else 'cpu'
 batch_size = 64
 img_channels = 3
 num_classes = 10
-start_lr = 1
+start_lr = 0.1
 num_epochs = 30
-model_save_path = 'resnet50_cifar10.pth'
+model_save_path = 'resnet101_cifar10.pth'
 
 train_dataset = datasets.CIFAR10(root='/root/RESNET/dataSet', train=True, download=True, transform=loader.tensor)
 valid_dataset = datasets.CIFAR10(root='/root/RESNET/dataSet', train=False, download=False, transform=loader.tensor)
@@ -97,7 +97,7 @@ def validate(model, device, loader, loss_fn):
 
 # Main training loop
 if __name__ == "__main__":
-    model = models.ResNet50(img_channels, num_classes).to(device)
+    model = models.ResNet101(img_channels, num_classes).to(device)
     optimizer = optim.Adam(model.parameters(), lr=start_lr)
     loss_fn = nn.CrossEntropyLoss()
 
