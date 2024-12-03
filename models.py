@@ -24,7 +24,7 @@ def get_model():
     model.heads = heads
     return model
 
-"""class block(nn.Module):
+class block(nn.Module):
     def __init__(self, in_channels, out_channels, identity_downsample=None, stride=1):
         super(block, self).__init__()
         self.expansion = 4
@@ -107,11 +107,11 @@ class resnet(nn.Module):
         for i in range(num_residual_blocks - 1):
             layers.append(block(self.in_channels, out_channels))
 
-        return nn.Sequential(*layers)"""
+        return nn.Sequential(*layers)
 
 
 #FEATURE PYRMAID NETWORK
-"""class FPNBlock(nn.Module):
+class FPNBlock(nn.Module):
     def __init__(self, in_channels, out_channels=256, is_highest_block=False):
         super().__init__()
         self.conv1 = nn.Conv2d(in_channels, out_channels, kernel_size=1, stride=1, padding=0)
@@ -141,7 +141,7 @@ class FPN(nn.Module):
         _, P2 = self.P2(C2, x)
         P6 = self.P6(P5)
 
-        return P2, P3, P4, P5, P6"""
+        return P2, P3, P4, P5, P6
 
 
 if __name__ == "__main__":
