@@ -2,7 +2,7 @@ import cv2
 import torch
 import torch.optim as optim
 import torch.nn as nn
-from torchvision.datasets import CIFAR10
+from torchvision.datasets import CIFAR10, FashionMNIST
 import torchvision.transforms as transforms
 import torch.utils.data as data
 import matplotlib.pyplot as plt
@@ -13,19 +13,19 @@ import numpy as np
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 batch_size = 64
-img_channels = 3
+img_channels = 1
 num_classes = 10
 start_lr = 0.1
 num_epochs = 30
-model_save_path = 'resnet101_cifar10.pth'
+model_save_path = 'FashionMnist_cifar10.pth'
 
 transform = transforms.Compose([
     transforms.ToTensor(),  # Convert PIL image or numpy.ndarray to tensor
-    transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+    transforms.Normalize((0.5), (0.5))
 ])
 
-train_dataset = CIFAR10(root='/root/RESNET/dataSet', train=True, download=True, transform=transform)
-valid_dataset = CIFAR10(root='/root/RESNET/dataSet', train=False, download=False, transform=transform)
+train_dataset = FashionMNIST(root='/root/RESNET/dataSet', train=True, download=True, transform=transform)
+valid_dataset = FashionMNIST(root='/root/RESNET/dataSet', train=False, download=False, transform=transform)
 
 train_loader = data.DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
 valid_loader = data.DataLoader(valid_dataset, batch_size=batch_size, shuffle=False)
