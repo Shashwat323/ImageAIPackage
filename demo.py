@@ -41,4 +41,5 @@ def test_and_show(img_dir, weight_dir):
 
 
 if __name__ == "__main__":
-    pred = test_and_show('unit_test_images/sunflower.jpg', 'weights/20241202_012102.pt')
+    pred = test_and_show('unit_test_images/daisy-drawing.jpg', 'weights/20241202_012102.pt')
+    pred = test_and_show('unit_test_images/random_drawing.jpg', 'weights/20241202_012102.pt')
