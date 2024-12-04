@@ -144,6 +144,21 @@ class FPN(nn.Module):
         return P2, P3, P4, P5, P6
 
 
+class ResnetFPN(nn.Module):
+    def __init__(self, resnet=None, fpn=None):
+        super().__init__()
+        # Create ResNet
+        self.resnet = resnet
+
+        # Create FPN
+        self.FPN = fpn
+
+    def forward(self, x):
+        C2, C3, C4, C5, _ = self.resnet(x)
+        P2, P3, P4, P5, P6 = self.FPN(C2, C3, C4, C5)
+        return P2, P3, P4, P5, P6
+
+
 if __name__ == "__main__":
     model = get_model()
     print(model)
