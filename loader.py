@@ -1,6 +1,7 @@
 import os
 from functools import partial
 
+import cv2
 from torchvision import transforms
 
 import imageaipackage as iap
@@ -27,17 +28,6 @@ augment = iap.TransformPipeline([
     iap.adjust_contrast,
     iap.adjust_hue,
     iap.square_rotate
-])
-
-augment_cnn = iap.TransformPipeline([
-    iap.img_to_numpy,
-    iap.mirror_image,
-    iap.adjust_brightness,
-    iap.adjust_contrast,
-    iap.adjust_hue,
-    iap.square_rotate,
-    iap.gaussian_blur,
-    iap.sharpen
 ])
 
 tensor = iap.TransformPipeline([
