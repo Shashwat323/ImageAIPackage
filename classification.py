@@ -17,7 +17,7 @@ img_channels = 3
 num_classes = 10
 start_lr = 0.1
 num_epochs = 30
-model_save_path = 'resnet101_cifar10.pth'
+model_save_path = 'FashionMnist_cifar10.pth'
 
 transform = transforms.Compose([
     transforms.ToTensor(),  # Convert PIL image or numpy.ndarray to tensor
