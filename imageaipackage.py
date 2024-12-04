@@ -686,9 +686,6 @@ def watershed(img_input):
     returnImg = cv2.drawContours(returnImg, objects, -1, color=(0, 0, 255), thickness=2)
     return returnImg
 
-def img_to_numpy(img):
-    return np.array(img)
-
 class TransformPipeline:
     def __init__(self, transformations: List[Callable[[np.ndarray], np.ndarray]]):
         """

@@ -15,13 +15,13 @@ from torch.utils.data import random_split
 resize_to = partial(iap.resize, new_width=518)
 
 normalize = iap.TransformPipeline([
-    iap.img_to_numpy,
+    iap.img_to_numpy_array,
     iap.crop,
     resize_to
 ])
 
 augment = iap.TransformPipeline([
-    iap.img_to_numpy,
+    iap.img_to_numpy_array,
     iap.mirror_image,
     iap.adjust_brightness,
     iap.adjust_contrast,
@@ -169,5 +169,5 @@ def get_dataloaders(batch_size=16, root=""):
 if __name__ == "__main__":
     dataset = ImageDataset("D:\\Other\\Repos\\ImageAIPackage\\dataset\\train", transform=normalize, label_transform=flower_label_to_index)
     augmented_dataset = AugmentedImageDataset(dataset, transform=augment)
-    augmented_dataset = TransformedImageDataset(augmented_dataset, transform=tensor)
+    #augmented_dataset = TransformedImageDataset(augmented_dataset, transform=tensor)
     show_sample_image(augmented_dataset)
