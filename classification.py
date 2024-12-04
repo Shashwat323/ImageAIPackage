@@ -1,3 +1,4 @@
+import cv2
 import torch
 import torch.optim as optim
 import torch.nn as nn
@@ -8,6 +9,7 @@ import matplotlib.pyplot as plt
 from tqdm import tqdm
 import loader
 import models
+import numpy as np
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 batch_size = 64
@@ -15,15 +17,16 @@ img_channels = 3
 num_classes = 10
 start_lr = 0.1
 num_epochs = 30
-model_save_path = 'resnet50spare_cifar10.pth'
+model_save_path = 'resnet101_cifar10.pth'
 
 transform = transforms.Compose([
     transforms.ToTensor(),  # Convert PIL image or numpy.ndarray to tensor
-    transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))  # Normalize image data
+    transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
 ])
 
-train_dataset = CIFAR10(root='/root/RESNET/dataSet', train=True, download=True, transform=loader.tensor)
-valid_dataset = CIFAR10(root='/root/RESNET/dataSet', train=False, download=False, transform=loader.tensor)
+train_dataset = CIFAR10(root='/root/RESNET/dataSet', train=True, download=True, transform=transform)
+valid_dataset = CIFAR10(root='/root/RESNET/dataSet', train=False, download=False, transform=transform)
+
 train_loader = data.DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
 valid_loader = data.DataLoader(valid_dataset, batch_size=batch_size, shuffle=False)
 
@@ -106,7 +109,8 @@ def ResNet152(img_channels=3, num_classes=1000):
     return models.resnet(models.block, [3, 8, 36, 3], img_channels, num_classes)
 # Main training loop
 if __name__ == "__main__":
-    model = ResNet50(img_channels, num_classes).to(device)
+    model = ResNet101(img_channels, num_classes).to(device)
+    #model.load_state_dict(torch.load(model_save_path, weights_only=False, map_location=torch.device('cpu')))
     optimizer = optim.Adam(model.parameters(), lr=start_lr)
     loss_fn = nn.CrossEntropyLoss()
 

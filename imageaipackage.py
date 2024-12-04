@@ -720,3 +720,7 @@ class TransformPipeline:
             img = transform(img)
         return img
 
+def convert_to_rgb(img):
+    if isinstance(img, np.ndarray):
+        return cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    return img
