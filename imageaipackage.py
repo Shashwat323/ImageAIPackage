@@ -77,19 +77,6 @@ def random_crop(image_array: np.ndarray):
     cropped_image = image.crop(box)
     return np.array(cropped_image)
 
-def gray_scale(image_array: np.ndarray, mode: int = 1):
-    image = Image.fromarray(image_array)
-    if mode == 1:
-        gray_scaled_image = image.convert('L')
-    elif mode == 2:
-        gray_scaled_image = image.quantize(colors=256)
-        gray_scaled_image = image.convert('L')
-    elif mode == 3:
-        gray_scaled_image = image.convert('1')
-    else:
-        raise ValueError("Mode must be 1, 2, or 3")
-    return np.array(gray_scaled_image)
-
 
 def save_image(img: np.ndarray, output_file_path: str) -> None:
     """

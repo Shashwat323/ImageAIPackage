@@ -1,6 +1,9 @@
+import gzip
 import os
 from functools import partial
 
+import numpy as np
+import idx2numpy
 from torchvision import transforms
 
 import imageaipackage as iap
@@ -11,6 +14,7 @@ from matplotlib import pyplot as plt
 from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
 from torch.utils.data import random_split
+
 
 resize_to = partial(iap.resize, new_width=518)
 
@@ -34,6 +38,12 @@ tensor = iap.TransformPipeline([
     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])  # Normalize with ImageNet statistics
 ])
 
+number_tensor = iap.TransformPipeline([
+    iap.convert_to_grey,
+    transforms.ToTensor(),  # Converts PIL Image or NumPy ndarray to tensor and scales to [0, 1]
+    transforms.Normalize(mean=[0.5,], std=[0.5,])  # Normalize with ImageNet statistics
+])
+
 def flower_label_to_index(x):
     classes = ["sunflower", "dandelion", "daisy", "tulip", "rose"]
 
@@ -51,6 +61,29 @@ def flower_index_to_label(index):
         return classes[index]
     else:
         raise IndexError(f"Index out of range: {index}")
+
+class UbyteImageDataset(Dataset):
+    def __init__(self, root_dir, img_file, label_file, transform=None, label_transform=None):
+        self.root_dir = root_dir
+        self.images = idx2numpy.convert_from_file(os.path.join(root_dir, img_file))
+        self.labels = idx2numpy.convert_from_file(os.path.join(root_dir, label_file))
+        self.transform = transform
+        self.label_transform = label_transform
+
+    def __len__(self):
+        return len(self.images)
+
+    def __getitem__(self, idx):
+        image = self.images[idx]
+        label = self.labels[idx]
+
+        if self.label_transform:
+            label = self.label_transform(label)
+
+        if self.transform:
+            image = self.transform(image)
+
+        return image, label
 
 # the original dataset
 class ImageDataset(Dataset):
@@ -150,12 +183,19 @@ def train_val_split(dataset):
 
 
 # get dataloaders
-def get_dataloaders(batch_size=16, root=""):
-    train_val_dataset = ImageDataset(root + '/dataset/train', normalize, flower_label_to_index)
-    train_val_dataset = AugmentedImageDataset(train_val_dataset, augment)
-    train_val_dataset = TransformedImageDataset(train_val_dataset, tensor)
-    test_dataset = ImageDataset(root + '/dataset/test', normalize, flower_label_to_index)
-    test_dataset = TransformedImageDataset(test_dataset, tensor)
+def get_dataloaders(batch_size=16, root="", dataset_type = "default"):
+    if dataset_type == "default":
+        train_val_dataset = ImageDataset(root + '/dataset/train', normalize, flower_label_to_index)
+        test_dataset = ImageDataset(root + '/dataset/test', normalize, flower_label_to_index)
+        train_val_dataset = AugmentedImageDataset(train_val_dataset, augment)
+        train_val_dataset = TransformedImageDataset(train_val_dataset, tensor)
+        test_dataset = TransformedImageDataset(test_dataset, tensor)
+    else:
+        train_val_dataset = UbyteImageDataset(root, 'train-images.idx3-ubyte', 'train-labels.idx1-ubyte')
+        test_dataset = UbyteImageDataset(root, 't10k-images.idx3-ubyte', 't10k-labels.idx1-ubyte')
+        train_val_dataset = AugmentedImageDataset(train_val_dataset, augment)
+        train_val_dataset = TransformedImageDataset(train_val_dataset, number_tensor)
+        test_dataset = TransformedImageDataset(test_dataset, number_tensor)
 
     train_dataset, val_dataset = train_val_split(train_val_dataset)
 
@@ -167,7 +207,8 @@ def get_dataloaders(batch_size=16, root=""):
 
 # for test
 if __name__ == "__main__":
-    dataset = ImageDataset("D:\\Other\\Repos\\ImageAIPackage\\dataset\\train", transform=normalize, label_transform=flower_label_to_index)
-    augmented_dataset = AugmentedImageDataset(dataset, transform=augment)
+    #dataset = ImageDataset("D:\\Other\\Repos\\ImageAIPackage\\dataset\\train", transform=normalize, label_transform=flower_label_to_index)
+    dataset = UbyteImageDataset("D:\\Other\\Repos\\ImageAIPackage\\numbers_dataset", "train-images.idx3-ubyte", "train-labels.idx1-ubyte")
+    augmented_dataset = AugmentedImageDataset(dataset)
     #augmented_dataset = TransformedImageDataset(augmented_dataset, transform=tensor)
     show_sample_image(augmented_dataset)

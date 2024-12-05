@@ -140,13 +140,16 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--root', type=str, default="", help='set to root directory (where ImageAIPackage is located)')
+    parser.add_argument('--dataset', type=str, default="")
+    parser.add_argument('--model', type=str, default="")
+    parser.add_argument('--epochs', type=int, default=10, help='number of epochs to train for')
     args = parser.parse_args()
 
-    train_loader, val_loader, test_loader = get_dataloaders(64, root=args.root)
-    model = get_model().float().to(device)
+    train_loader, val_loader, test_loader = get_dataloaders(64, root=args.root, dataset_type=args.dataset)
+    model = get_model(model_type=args.model).float().to(device)
     loss_fn = nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
-    epochs = 10
+    epochs = args.epochs
     early_stopping = EarlyStopping(patience=3, verbose=True, delta=0, root=args.root)
 
     for t in range(epochs):
