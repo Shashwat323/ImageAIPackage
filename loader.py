@@ -18,6 +18,7 @@ from torch.utils.data import random_split
 
 
 resize_to = partial(iap.resize, new_width=518)
+number_resize_to = partial(iap.resize, new_width=28)
 
 normalize = iap.TransformPipeline([
     iap.img_to_numpy_array,
@@ -27,7 +28,6 @@ normalize = iap.TransformPipeline([
 
 augment = iap.TransformPipeline([
     iap.img_to_numpy_array,
-    iap.mirror_image,
     iap.adjust_brightness,
     iap.adjust_contrast,
     iap.adjust_hue,
@@ -40,6 +40,9 @@ tensor = iap.TransformPipeline([
 ])
 
 number_tensor = iap.TransformPipeline([
+    iap.img_to_numpy_array,
+    iap.crop,
+    number_resize_to,
     iap.convert_to_grey,
     transforms.ToTensor(),  # Converts PIL Image or NumPy ndarray to tensor and scales to [0, 1]
     transforms.Normalize(mean=[0.5,], std=[0.5,])  # Normalize with ImageNet statistics
