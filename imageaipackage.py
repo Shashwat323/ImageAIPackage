@@ -427,7 +427,7 @@ def gaussian_blur(img_input, kernel_size=3, sigma=3):
            ValueError: If kernel_size is not an int or sigma is not a float, also img_input
 
        """
-    img = img_to_numpy_array(img_input, grey=True)
+    img = img_to_numpy_array(img_input)
     if not isinstance(kernel_size, int) or not (isinstance(sigma, int) or isinstance(sigma, float)):
         raise ValueError("kernel_size must be an int and sigma must be a numeric value")
     return cv2.GaussianBlur(img, (kernel_size, kernel_size), sigma)
@@ -536,12 +536,12 @@ def custom_kernel_blur(img_input, kernel):
 
 
     """
-    img = img_to_numpy_array(img_input, grey=True)
+    img = img_to_numpy_array(img_input)
     if not isinstance(kernel, np.ndarray):
         raise ValueError("kernel must be a np.ndarray")
     return cv2.filter2D(img, -1, kernel)
 
-def sharpen(img_input, sharpness):
+def sharpen(img_input, sharpness = 9):
     """
             Sharpens the image using a custom sharpness
 
@@ -559,7 +559,7 @@ def sharpen(img_input, sharpness):
     if not (isinstance(sharpness, float) or isinstance(sharpness, int)):
         raise ValueError("sharpness must be a numeric value")
     contrast = (sharpness * (8/9)) / 8 * -1
-    img = img_to_numpy_array(img_input, grey=True)
+    img = img_to_numpy_array(img_input)
     return custom_kernel_blur(img, np.array([[contrast, contrast, contrast],
                                              [contrast, sharpness, contrast],
                                              [contrast, contrast, contrast]]))
@@ -704,3 +704,7 @@ class TransformPipeline:
             img = transform(img)
         return img
 
+def convert_to_rgb(img):
+    if isinstance(img, np.ndarray):
+        return cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    return img

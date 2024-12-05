@@ -4,6 +4,7 @@ from functools import partial
 
 import numpy as np
 import idx2numpy
+import cv2
 from torchvision import transforms
 
 import imageaipackage as iap
