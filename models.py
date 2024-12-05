@@ -1,5 +1,9 @@
+import argparse
+
 import torch.nn as nn
 from torchvision.models import vit_h_14
+import torch.nn.functional as F
+import flexiblemodel
 
 class ImageHead(nn.Module):
     def __init__(self):
@@ -15,12 +19,46 @@ class ImageHead(nn.Module):
         x = self.linear2(x)
         return x
 
+class SimpleCNN(nn.Module):
+    def __init__(self, num_classes=10):
+        super(SimpleCNN, self).__init__()
+        # First convolutional layer
+        self.conv1 = nn.Conv2d(in_channels=1, out_channels=32, kernel_size=3, padding=1)
+        # Second convolutional layer
+        self.conv2 = nn.Conv2d(in_channels=32, out_channels=64, kernel_size=3, padding=1)
+        # Fully connected layer
+        self.fc1 = nn.Linear(in_features=64 * 7 * 7, out_features=128)
+        # Output layer
+        self.fc2 = nn.Linear(in_features=128, out_features=num_classes)
 
-def get_model():
-    model = vit_h_14(weights='IMAGENET1K_SWAG_E2E_V1')
-    for param in model.parameters():
-        param.requires_grad = False
-    heads = ImageHead()
+    def forward(self, x):
+        # Apply first convolution with ReLU and max pooling
+        x = F.relu(self.conv1(x))
+        x = F.max_pool2d(x, 2)
+        # Apply second convolution with ReLU and max pooling
+        x = F.relu(self.conv2(x))
+        x = F.max_pool2d(x, 2)
+        # Flatten the output
+        x = x.view(x.size(0), -1)
+        # Apply the first fully connected layer with ReLU
+        x = F.relu(self.fc1(x))
+        # Apply the output layer
+        x = self.fc2(x)
+        return x
+
+def get_model(model_type="default"):
+    model = None
+    heads = None
+    match model_type:
+        case "default":
+            model = vit_h_14(weights='IMAGENET1K_SWAG_E2E_V1')
+            heads = ImageHead()
+            for param in model.parameters():
+                param.requires_grad = False
+        case "simple_cnn":
+            model = SimpleCNN()
+            for param in model.parameters():
+                param.requires_grad = True
     model.heads = heads
     return model
 
@@ -160,5 +198,8 @@ class ResnetFPN(nn.Module):
 
 
 if __name__ == "__main__":
-    model = get_model()
-    print(model)
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--model_type', type=str, default="squeezenet", help="vit_h_14, squeezenet")
+    args = parser.parse_args()
+    m = get_model(args.model_type)
+    print(m)

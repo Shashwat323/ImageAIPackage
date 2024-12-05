@@ -1,3 +1,5 @@
+import argparse
+
 import kagglehub
 import os
 import shutil
@@ -34,31 +36,11 @@ def dataset_importer(dataset_name, dest_folder="dataset"):
 
     print("Dataset moved to:", dest_path)
 
-def download_cifar10_dataset(download_path):
-    """
-    Downloads the CIFAR-10 dataset to the specified path.
-
-    :param download_path: The local directory path where the dataset should be downloaded.
-    """
-
-    # Download the training set
-    torchvision.datasets.CIFAR10(
-        root=download_path,
-        train=True,
-        download=True
-    )
-
-    # Download the test set
-    torchvision.datasets.CIFAR10(
-        root=download_path,
-        train=False,
-        download=True
-    )
-
-    print(f"CIFAR-10 dataset downloaded to {download_path}")
-
 if __name__ == "__main__":
-    download_cifar10_dataset('cifar10-dataset')
-    #dataset_importer("imsparsh/flowers-dataset")
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--dataset', type=str, default="", help="imsparsh/flowers-dataset, navoneel/brain-mri-images-for-brain-tumor-detection, hojjatk/mnist-dataset")
+    parser.add_argument('--dest_folder', type=str, default="dataset")
+    args = parser.parse_args()
+    dataset_importer(args.dataset, args.dest_folder)
 
 

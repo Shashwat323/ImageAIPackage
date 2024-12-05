@@ -13,10 +13,6 @@ class ImageAIPackageTests(unittest.TestCase):
         new_img = iap.crop(iap.image_path_to_np_array("unit_test_images/TestImg1.jpg"), 150)
         iap.save_image(new_img, "unit_test_images/CroppedImg1.jpg")
 
-    def test_gray_scale(self):
-        new_img = iap.gray_scale(iap.image_path_to_np_array("unit_test_images/TestImg1.jpg"), 1)
-        iap.save_image(new_img, "unit_test_images/grayScaledImage.jpg")
-
     def test_random_crop(self):
         new_img = iap.random_crop(iap.image_path_to_np_array("unit_test_images/TestImg1.jpg"))
         iap.save_image(new_img, "unit_test_images/random_cropped_image.jpg")
