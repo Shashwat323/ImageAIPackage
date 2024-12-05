@@ -196,7 +196,6 @@ def train_val_split(dataset):
 def get_dataloaders(batch_size=16, root="", dataset_type = "default"):
     train_val_dataset = None
     test_dataset = None
-    print(dataset_type)
     if dataset_type == "default":
         train_val_dataset = FolderImageDataset(root + '/dataset/train', normalize, flower_label_to_index)
         test_dataset = FolderImageDataset(root + '/dataset/test', normalize, flower_label_to_index)
@@ -220,7 +219,6 @@ def get_dataloaders(batch_size=16, root="", dataset_type = "default"):
         test_dataset = AugmentedImageDataset(test_dataset, augment)
         train_val_dataset = TransformedImageDataset(train_val_dataset, tensor)
         test_dataset = TransformedImageDataset(test_dataset, tensor)
-        print(len(train_val_dataset), len(test_dataset))
 
     elif dataset_type == "mnist":
         train_val_dataset = UbyteImageDataset(root, '/numbers_dataset/train-images.idx3-ubyte', '/numbers_dataset/train-labels.idx1-ubyte')
@@ -229,8 +227,6 @@ def get_dataloaders(batch_size=16, root="", dataset_type = "default"):
         train_val_dataset = TransformedImageDataset(train_val_dataset, number_tensor)
         test_dataset = TransformedImageDataset(test_dataset, number_tensor)
 
-    print(dataset_type)
-    print("what's going on?")
     train_dataset, val_dataset = train_val_split(train_val_dataset)
 
     train_loader = DataLoader(train_dataset, batch_size=batch_size,  shuffle=True)
