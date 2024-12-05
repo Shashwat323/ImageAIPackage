@@ -4,6 +4,7 @@ import torch
 import torch.nn as nn
 from loader import get_dataloaders
 from models import get_model
+from tqdm import tqdm
 
 import numpy as np
 import argparse
@@ -12,9 +13,12 @@ import argparse
 def train(train_loader, model, loss_fn, optimizer):
     device = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
 
+    total = 0
+    correct = 0
+    progress_bar = tqdm(enumerate(train_loader), total=len(train_loader))
     # Train
     model.train()
-    for batch, (X, y) in enumerate(train_loader):
+    for batch, (X, y) in progress_bar:
         X = X.to(device)
         y = torch.tensor(y, dtype=torch.long).to(device)
 
@@ -27,10 +31,14 @@ def train(train_loader, model, loss_fn, optimizer):
         loss.backward()
         optimizer.step()
 
+        # Accuracy calculation
+        _, predicted = torch.max(pred.data, 1)
+        total += y.size(0)
+        correct += (predicted == y).sum().item()
+
         # Show progress
         if batch % 10 == 0:
-            loss, current = loss.item(), batch * len(X)
-            print(f"train loss: {loss:>7f} [{current:>5d}/{len(train_loader.dataset):>5d}]")
+            progress_bar.set_postfix(loss=loss.item(), accuracy=100 * correct / total)
 
 
 # validate and return mae loss
