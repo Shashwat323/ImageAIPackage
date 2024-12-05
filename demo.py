@@ -38,5 +38,5 @@ def test_and_show(img_dir, weight_dir, to_tensor, model="default", label_transfo
 
 
 if __name__ == "__main__":
-    test_and_show("unit_test_images/three.jpg", 'D:\\Other\\Repos\\ImageAIPackage\\weights\\20241205_043831.pt',
+    test_and_show("unit_test_images/one.png", 'D:\\Other\\Repos\\ImageAIPackage\\weights\\20241205_131821.pt',
                   model="simple_cnn", to_tensor=loader.number_tensor)
