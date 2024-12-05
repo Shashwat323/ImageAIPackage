@@ -20,14 +20,14 @@ class ImageHead(nn.Module):
         return x
 
 class SimpleCNN(nn.Module):
-    def __init__(self, num_classes=10):
+    def __init__(self, num_classes=10, downsample=7, in_channels=1):
         super(SimpleCNN, self).__init__()
         # First convolutional layer
-        self.conv1 = nn.Conv2d(in_channels=1, out_channels=32, kernel_size=3, padding=1)
+        self.conv1 = nn.Conv2d(in_channels=in_channels, out_channels=32, kernel_size=3, padding=1)
         # Second convolutional layer
         self.conv2 = nn.Conv2d(in_channels=32, out_channels=64, kernel_size=3, padding=1)
         # Fully connected layer
-        self.fc1 = nn.Linear(in_features=64 * 7 * 7, out_features=128)
+        self.fc1 = nn.Linear(in_features=64 * downsample * downsample, out_features=128)
         # Output layer
         self.fc2 = nn.Linear(in_features=128, out_features=num_classes)
 
@@ -55,8 +55,12 @@ def get_model(model_type="default"):
             heads = ImageHead()
             for param in model.parameters():
                 param.requires_grad = False
-        case "simple_cnn":
+        case "number_simple_cnn":
             model = SimpleCNN()
+            for param in model.parameters():
+                param.requires_grad = True
+        case "cifar10_simple_cnn":
+            model = SimpleCNN(downsample=8, in_channels=3)
             for param in model.parameters():
                 param.requires_grad = True
     model.heads = heads

@@ -1,3 +1,4 @@
+import PIL
 import cv2
 import itertools
 import numpy as np
@@ -478,6 +479,8 @@ def img_to_numpy_array(image_input, grey=False):
             if grey:
                 return convert_to_grey(img)
             return img
+    elif isinstance(image_input, PIL.Image.Image):
+        return np.array(image_input)
     if isinstance(image_input, str):
         raise ValueError("File path must be a valid file path")
     raise ValueError("Image must be either a valid file path or a numpy array")
