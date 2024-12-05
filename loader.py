@@ -229,6 +229,8 @@ def get_dataloaders(batch_size=16, root="", dataset_type = "default"):
         train_val_dataset = TransformedImageDataset(train_val_dataset, number_tensor)
         test_dataset = TransformedImageDataset(test_dataset, number_tensor)
 
+    print(dataset_type)
+    print("what's going on?")
     train_dataset, val_dataset = train_val_split(train_val_dataset)
 
     train_loader = DataLoader(train_dataset, batch_size=batch_size,  shuffle=True)
