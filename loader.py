@@ -65,9 +65,8 @@ def flower_index_to_label(index):
 
 class UbyteImageDataset(Dataset):
     def __init__(self, root_dir, img_file, label_file, transform=None, label_transform=None):
-        self.root_dir = root_dir
-        self.images = idx2numpy.convert_from_file(os.path.join(root_dir, img_file))
-        self.labels = idx2numpy.convert_from_file(os.path.join(root_dir, label_file))
+        self.images = idx2numpy.convert_from_file(root_dir + img_file)
+        self.labels = idx2numpy.convert_from_file(root_dir + label_file)
         self.transform = transform
         self.label_transform = label_transform
 
@@ -209,7 +208,7 @@ def get_dataloaders(batch_size=16, root="", dataset_type = "default"):
 # for test
 if __name__ == "__main__":
     #dataset = ImageDataset("D:\\Other\\Repos\\ImageAIPackage\\dataset\\train", transform=normalize, label_transform=flower_label_to_index)
-    dataset = UbyteImageDataset("D:\\Other\\Repos\\ImageAIPackage", "/numbers_dataset/train-images.idx3-ubyte", "/numbers_dataset/train-labels.idx1-ubyte")
+    dataset = UbyteImageDataset("D:/Other/Repos/ImageAIPackage", "/numbers_dataset/train-images.idx3-ubyte", "/numbers_dataset/train-labels.idx1-ubyte")
     augmented_dataset = AugmentedImageDataset(dataset)
     #augmented_dataset = TransformedImageDataset(augmented_dataset, transform=tensor)
     show_sample_image(augmented_dataset)
