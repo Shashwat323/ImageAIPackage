@@ -36,18 +36,16 @@ def train(train_loader, model, loss_fn, optimizer):
         total += y.size(0)
         correct += (predicted == y).sum().item()
 
-        # Show progress
-        if batch % 10 == 0:
-            progress_bar.set_postfix(loss=loss.item(), accuracy=100 * correct / total)
+        progress_bar.set_postfix(loss=loss.item(), accuracy=100 * correct / total)
 
 
 # validate and return mae loss
-def validate(val_loader, model):
+def validate(val_loader, model, loss_fn):
     device = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
 
     # Validation
     model.eval()
-    val_loss_mae = 0
+    val_loss = 0
     with torch.no_grad():
         for batch_idx, (X, y) in enumerate(val_loader):
             X = X.to(device)
@@ -55,24 +53,23 @@ def validate(val_loader, model):
 
             pred = model(X)
 
-            loss_mae = nn.L1Loss()(torch.argmax(pred, dim=1).float(), y.float())
-            val_loss_mae += loss_mae.item()
+            loss = loss_fn(pred, y)
+            val_loss += loss.item()
 
-    val_loss_mae /= len(val_loader)
+    val_loss /= len(val_loader)
 
-    print(f"val mae loss: {val_loss_mae}")
-    return val_loss_mae
+    print(f"val loss: {val_loss}")
+    return val_loss
 
 
 
-# Test and return MSE and MAE loss
-def test(test_loader, model):
+# Test and return loss
+def test(test_loader, model, loss_fn):
     device = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
 
     # Test
     model.eval()
-    test_loss_mse = 0
-    test_loss_mae = 0
+    test_loss = 0
     with torch.no_grad():
         for batch_idx, (X, y) in enumerate(test_loader):
             X = X.to(device)
@@ -80,16 +77,13 @@ def test(test_loader, model):
 
             pred = model(X)
 
-            loss_mse = nn.MSELoss()(torch.argmax(pred, dim=1).float(), y.float())
-            test_loss_mse += loss_mse.item()
-            loss_mae = nn.L1Loss()(torch.argmax(pred, dim=1).float(), y.float())
-            test_loss_mae += loss_mae.item()
+            loss = loss_fn(pred, y)
+            test_loss += loss.item()
 
-    test_loss_mse /= len(test_loader)
-    test_loss_mae /= len(test_loader)
+    test_loss /= len(test_loader)
 
-    print(f"test mse loss: {test_loss_mse:>7f}, test mae loss: {test_loss_mae:>7f}")
-    return test_loss_mse, test_loss_mae
+    print(f"test loss: {test_loss:>7f}")
+    return test_loss
 
 def generate_timestamp_string() -> str:
     """
@@ -163,13 +157,13 @@ if __name__ == "__main__":
     for t in range(epochs):
         print(f"Epoch {t + 1}\n-------------------------------")
         train(train_loader, model, loss_fn, optimizer)
-        val_loss = validate(test_loader, model)
+        val_loss = validate(test_loader, model, loss_fn)
         early_stopping(val_loss, model)
 
         if early_stopping.early_stop:
             print("Early stopping")
             break
     model.load_state_dict(torch.load(args.root + f'/weights/{generate_timestamp_string()}.pt'))
-    test(test_loader, model)
+    test(test_loader, model, loss_fn)
 
     print("Done!")

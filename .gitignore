@@ -1,3 +1,5 @@
 /dataset/
+/brain_dataset/
+/numbers_dataset/
 weights/*
 !weights/weights.txt

@@ -5,24 +5,20 @@ import torch
 from torchvision.transforms import ToTensor
 
 from models import get_model
-from loader import tensor, normalize, flower_index_to_label
+import loader
 
 
-def test_and_show(img_dir, weight_dir):
+def test_and_show(img_dir, weight_dir, to_tensor, model="default", label_transform=None):
     device = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
 
-    # open and transform image for vit
     image = Image.open(img_dir)
-    if image.mode != 'RGB':
-        image = image.convert('RGB')
-
-    image = normalize(image)
-    image_vit = tensor(image)
+    # open and transform image for vit
+    image_vit = to_tensor(img_dir)
     image_vit = image_vit.unsqueeze(0)
     image_vit = image_vit.to(device)
 
     # get model and predict
-    model = get_model()
+    model = get_model(model_type=model)
     model = model.to(device)
     model.load_state_dict(torch.load(weight_dir, map_location=device))
     model.eval()
@@ -31,7 +27,8 @@ def test_and_show(img_dir, weight_dir):
 
     print(pred)
     pred_label = torch.argmax(pred)
-    pred_label = flower_index_to_label(pred_label)
+    if label_transform:
+        pred_label = label_transform(pred_label)
 
     # plot
     plt.imshow(image)
@@ -41,5 +38,5 @@ def test_and_show(img_dir, weight_dir):
 
 
 if __name__ == "__main__":
-    pred = test_and_show('unit_test_images/daisy-drawing.jpg', 'weights/20241202_012102.pt')
-    pred = test_and_show('unit_test_images/random_drawing.jpg', 'weights/20241202_012102.pt')
+    test_and_show("unit_test_images/three.jpg", 'D:\\Other\\Repos\\ImageAIPackage\\weights\\20241205_043831.pt',
+                  model="simple_cnn", to_tensor=loader.number_tensor)
