@@ -196,6 +196,7 @@ def train_val_split(dataset):
 def get_dataloaders(batch_size=16, root="", dataset_type = "default"):
     train_val_dataset = None
     test_dataset = None
+    print(dataset_type)
     if dataset_type == "default":
         train_val_dataset = FolderImageDataset(root + '/dataset/train', normalize, flower_label_to_index)
         test_dataset = FolderImageDataset(root + '/dataset/test', normalize, flower_label_to_index)
