@@ -219,6 +219,7 @@ def get_dataloaders(batch_size=16, root="", dataset_type = "default"):
         test_dataset = AugmentedImageDataset(test_dataset, augment)
         train_val_dataset = TransformedImageDataset(train_val_dataset, tensor)
         test_dataset = TransformedImageDataset(test_dataset, tensor)
+        print(len(train_val_dataset), len(test_dataset))
 
     elif dataset_type == "mnist":
         train_val_dataset = UbyteImageDataset(root, '/numbers_dataset/train-images.idx3-ubyte', '/numbers_dataset/train-labels.idx1-ubyte')
