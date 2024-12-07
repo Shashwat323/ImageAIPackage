@@ -44,6 +44,6 @@ class ResnetFPN(nn.Module):
         self.FPN = fpn
 
     def forward(self, x):
-        C2, C3, C4, C5, _ = self.resnet(x)
+        C2, C3, C4, C5 = self.resnet.feature_extraction(x)
         P2, P3, P4, P5, P6 = self.FPN(C2, C3, C4, C5)
         return P2, P3, P4, P5, P6
