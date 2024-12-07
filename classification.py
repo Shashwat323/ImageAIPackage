@@ -2,7 +2,7 @@ import cv2
 import torch
 import torch.optim as optim
 import torch.nn as nn
-from torchvision.datasets import CIFAR10, FashionMNIST
+from torchvision.datasets import CIFAR10, FashionMNIST, ImageNet
 import torchvision.transforms as transforms
 import torch.utils.data as data
 import matplotlib.pyplot as plt
@@ -11,18 +11,20 @@ import loader
 import models
 import numpy as np
 from resnet import resnet, block
+import scipy
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 batch_size = 128
 img_channels = 3
 num_classes = 10
 start_lr = 0.1
-num_epochs = 30
+num_epochs = 60
 model_save_path = 'resnet50_cifar10.pth'
 
 transform_train = transforms.Compose([
     transforms.RandomCrop(32, padding=4),
     transforms.RandomHorizontalFlip(),
+    transforms.RandomRotation(degrees=15),
     transforms.ToTensor(),
     transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
 ])
