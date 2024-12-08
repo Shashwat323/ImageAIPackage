@@ -1,89 +1,12 @@
-import numpy as np
-import cv2
-import rembg
-
-# Image to Array.
-# img = cv2.imread('Sample.png')
-# Eg. call function normalise(cv2.imread('Sample.png'))
-
-# Remove background.
-# removeBackground(): Remove background of an image.
-
-# Adjust the contrast in an image.
-# histogramEqualisation() : Adjust contrast in an image using histogram equalisation
-
-# There are four methods of normalising images.
-# These will all convert the images to greyscale 
-# normalise() : Between 0 and 1
-# zeroMeanOneVar() : Z-Score of each pixel
-# minMaxScaling() : rescale pixel values to fit in a set range (0-1 by default)
-# meanNormalisation() : normalise based on the mean pixel value
-
-def removeBackground(img: np.ndarray):
-    """
-    Remove background.
-    Area outside will become white
-    Parameter:
-    - img (np.ndarray): cv2 image array in BGR colour. (cv2.imread(path_to_image_file))
-    Output:
-    - output (np.ndarray): Image with white background in array form
-    """
-    # Remove background
-    output = rembg.remove(img)
-    return output
-
-# CLAHE (Contrast Limited Adaptive Histogram Equalization)
-def histogramEqualisation(img: np.ndarray, greyscale: bool=False, clahe: bool=False, gridsize: int=8):
-    """
-    Adjust the contrast in an image using histogram equalisation.
-    Parameters:
-    - img (np.ndarray): cv2 image array in BGR colour. (cv2.imread(path_to_image_file))
-    - greyscale (bool): Set the output to be greyscale (default False)
-    - clahe (bool): Use Contrast Limited Adaptive Histogram Equalization (CLAHE) (default False)
-    - gridsize (int): gridsize of CLAHE to be applied (default 8).
-    Output:
-    - image (np.ndarray): output image in array form. 
-    """
-    if (clahe == False):
-        if (greyscale):
-            # Image to grayscale
-            grey_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-            # Apply histogram equalisation
-            image = cv2.equalizeHist(grey_img)
-        else:
-            # Convert to HSV
-            img_hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
-            # Histogram equalisation on V-channel
-            img_hsv[:, :, 2] = cv2.equalizeHist(img_hsv[:, :, 2])
-            # Convert to RGB
-            image = cv2.cvtColor(img_hsv, cv2.COLOR_HSV2BGR)
-    else:
-        if (greyscale):
-            # Image to grayscale
-            grey_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-            # Create and apply CLAHE
-            image = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(gridsize,gridsize)).apply(grey_img)
-        else:
-            # Convert to HSV
-            img_hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
-            # Histogram equalisation on V-channel
-            img_hsv[:, :, 2] = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(gridsize,gridsize)).apply(img_hsv[:, :, 2])
-            # Convert to RGB
-            image = cv2.cvtColor(img_hsv, cv2.COLOR_HSV2BGR)
-    return image
 import PIL
 import cv2
 import itertools
 import numpy as np
 import random
-
+import rembg
 from typing import Callable, List, Union
-import torch
 from PIL import Image, ImageOps, ImageEnhance
 import os
-from PIL import Image, ImageEnhance, ImageOps
-import numpy as np
-import random
 
 def overlay_images(base_image_array: np.ndarray, overlay_image_array: np.ndarray, transparency: float = 1.0):
     if not (0.0 <= transparency <= 1.0):
@@ -179,6 +102,72 @@ def image_path_to_np_array(image_file_path: str) -> np.ndarray:
     """
     img = cv2.imread(image_file_path)
     return img
+
+# Remove background.
+# removeBackground(): Remove background of an image.
+
+# Adjust the contrast in an image.
+# histogramEqualisation() : Adjust contrast in an image using histogram equalisation
+
+# There are four methods of normalising images.
+# These will all convert the images to greyscale 
+# normalise() : Between 0 and 1
+# zeroMeanOneVar() : Z-Score of each pixel
+# minMaxScaling() : rescale pixel values to fit in a set range (0-1 by default)
+# meanNormalisation() : normalise based on the mean pixel value
+
+def removeBackground(img: np.ndarray):
+    """
+    Remove background.
+    Area outside will become white
+    Parameter:
+    - img (np.ndarray): cv2 image array in BGR colour. (cv2.imread(path_to_image_file))
+    Output:
+    - output (np.ndarray): Image with white background in array form
+    """
+    # Remove background
+    output = rembg.remove(img)
+    return output
+
+# CLAHE (Contrast Limited Adaptive Histogram Equalization)
+def histogramEqualisation(img: np.ndarray, greyscale: bool=False, clahe: bool=False, gridsize: int=8):
+    """
+    Adjust the contrast in an image using histogram equalisation.
+    Parameters:
+    - img (np.ndarray): cv2 image array in BGR colour. (cv2.imread(path_to_image_file))
+    - greyscale (bool): Set the output to be greyscale (default False)
+    - clahe (bool): Use Contrast Limited Adaptive Histogram Equalization (CLAHE) (default False)
+    - gridsize (int): gridsize of CLAHE to be applied (default 8).
+    Output:
+    - image (np.ndarray): output image in array form. 
+    """
+    if (clahe == False):
+        if (greyscale):
+            # Image to grayscale
+            grey_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+            # Apply histogram equalisation
+            image = cv2.equalizeHist(grey_img)
+        else:
+            # Convert to HSV
+            img_hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+            # Histogram equalisation on V-channel
+            img_hsv[:, :, 2] = cv2.equalizeHist(img_hsv[:, :, 2])
+            # Convert to RGB
+            image = cv2.cvtColor(img_hsv, cv2.COLOR_HSV2BGR)
+    else:
+        if (greyscale):
+            # Image to grayscale
+            grey_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+            # Create and apply CLAHE
+            image = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(gridsize,gridsize)).apply(grey_img)
+        else:
+            # Convert to HSV
+            img_hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+            # Histogram equalisation on V-channel
+            img_hsv[:, :, 2] = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(gridsize,gridsize)).apply(img_hsv[:, :, 2])
+            # Convert to RGB
+            image = cv2.cvtColor(img_hsv, cv2.COLOR_HSV2BGR)
+    return image
 
 def normalise(img: np.ndarray,greyscale: bool=False):
     """
