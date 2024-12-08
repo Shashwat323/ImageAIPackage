@@ -42,11 +42,11 @@ class ResNet(nn.Module):
         super(ResNet, self).__init__()
         self.in_channels = 64
 
-        #self.conv1 = nn.Conv2d(image_channels, 64, kernel_size=7, stride=2, padding=3, bias=False)
-        self.conv1 = nn.Conv2d(image_channels, 64, kernel_size=3, stride=1, padding=1, bias=False)
+        self.conv1 = nn.Conv2d(image_channels, 64, kernel_size=7, stride=2, padding=3, bias=False)
+        #self.conv1 = nn.Conv2d(image_channels, 64, kernel_size=3, stride=1, padding=1, bias=False)
         self.bn1 = nn.BatchNorm2d(64)
         #self.relu = nn.ReLU()
-        #self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
+        self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
 
         #residual layers
         #conv2
@@ -67,7 +67,7 @@ class ResNet(nn.Module):
         out = self.conv1(x)
         out = self.bn1(out)
         out = nn.functional.relu(out)
-        #x = self.maxpool(x)
+        out = self.maxpool(out)
 
         C1 = self.layer1(out)
         C2 = self.layer2(C1)
