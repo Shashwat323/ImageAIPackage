@@ -1,45 +1,52 @@
 import torch.nn as nn
 
 class block(nn.Module):
+    expansion = 4
     def __init__(self, in_channels, out_channels, identity_downsample=None, stride=1):
         super(block, self).__init__()
-        self.expansion = 4
-        self.conv1 = nn.Conv2d(in_channels, out_channels, kernel_size=1, stride=1, padding=0, bias=False)
+        #self.expansion = 4
+        self.conv1 = nn.Conv2d(in_channels, out_channels, kernel_size=1, bias=False)
         self.bn1 = nn.BatchNorm2d(out_channels)
         self.conv2 = nn.Conv2d(out_channels, out_channels, kernel_size=3, stride=stride, padding=1, bias=False)
         self.bn2 = nn.BatchNorm2d(out_channels)
         self.conv3 = nn.Conv2d(out_channels, out_channels*self.expansion, kernel_size=1, stride=1, bias=False)
         self.bn3 = nn.BatchNorm2d(out_channels*self.expansion)
-        self.relu = nn.ReLU()
-        self.identity_downsample = identity_downsample
+        #self.relu = nn.functional.relu()
+        self.shortcut = nn.Sequential()
+        #self.identity_downsample = identity_downsample
+        if stride != 1 or in_channels != out_channels * self.expansion:
+            self.shortcut = nn.Sequential(nn.Conv2d(in_channels, self.expansion*out_channels, kernel_size=1, stride=stride, bias=False),
+            nn.BatchNorm2d(self.expansion*out_channels))
+
 
     def forward(self, x):
-        identity = x
-        x = self.conv1(x)
-        x = self.bn1(x)
-        x = self.relu(x)
-        x = self.conv2(x)
-        x = self.bn2(x)
-        x = self.relu(x)
-        x = self.conv3(x)
-        x = self.bn3(x)
-
-        if self.identity_downsample is not None:
+        #identity = x
+        out = self.conv1(x)
+        out = self.bn1(out)
+        out = nn.functional.relu(out)
+        out = self.conv2(out)
+        out = self.bn2(out)
+        out = nn.functional.relu(out)
+        out = self.conv3(out)
+        out = self.bn3(out)
+        out += self.shortcut(x)
+        out = nn.functional.relu(out)
+        """if self.identity_downsample is not None:
             identity = self.identity_downsample(identity)
         x += identity
-        x = self.relu(x)
-        return x
+        x = self.relu(x)"""
+        return out
 
-class resnet(nn.Module):
+class ResNet(nn.Module):
     def __init__(self, block, layers, image_channels, num_classes):
-        super(resnet, self).__init__()
+        super(ResNet, self).__init__()
         self.in_channels = 64
 
-        self.conv1 = nn.Conv2d(image_channels, 64, kernel_size=7, stride=2, padding=3, bias=False)
-        #self.conv1 = nn.Conv2d(image_channels, 64, kernel_size=3, stride=1, padding=1, bias=False)
+        #self.conv1 = nn.Conv2d(image_channels, 64, kernel_size=7, stride=2, padding=3, bias=False)
+        self.conv1 = nn.Conv2d(image_channels, 64, kernel_size=3, stride=1, padding=1, bias=False)
         self.bn1 = nn.BatchNorm2d(64)
-        self.relu = nn.ReLU()
-        self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
+        #self.relu = nn.ReLU()
+        #self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
 
         #residual layers
         #conv2
@@ -52,29 +59,34 @@ class resnet(nn.Module):
         self.layer4 = self.make_layer(block, layers[3], out_channels=512, stride=2)
 
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
-        self.fc = nn.Linear(512*4, num_classes)
+        #self.fc = nn.Linear(512*4, num_classes)
+        self.linear = nn.Linear(512 * block.expansion, num_classes)
         #self.softmax = nn.Softmax(dim=num_classes)
 
     def forward(self, x):
-        x = self.conv1(x)
-        x = self.bn1(x)
-        x = self.relu(x)
-        x = self.maxpool(x)
+        out = self.conv1(x)
+        out = self.bn1(out)
+        out = nn.functional.relu(out)
+        #x = self.maxpool(x)
 
-        C1 = self.layer1(x)
+        C1 = self.layer1(out)
         C2 = self.layer2(C1)
         C3 = self.layer3(C2)
         C4 = self.layer4(C3)
 
-        x = self.avgpool(C4)
-        x = x.reshape(x.shape[0], -1)
-        x = self.fc(x)
+        #out = nn.functional.avg_pool2d(C4, 4)
+        #out = out.view(out.size(0), -1)
+        #out = self.linear(out)
+        out = self.avgpool(C4)
+        out = out.reshape(out.shape[0], -1)
+        out = self.linear(out)
+        #x = self.fc(x)
         #x = self.softmax(x)
-        return x
+        return out
 
     def feature_extraction(self, x):
-        x = self.conv(x)
-        x = self.bn(x)
+        x = self.conv1(x)
+        x = self.bn1(x)
         x = self.relu(x)
         x = self.maxpool(x)
 
@@ -85,19 +97,16 @@ class resnet(nn.Module):
         return C1, C2, C3, C4
 
     def make_layer(self, block, num_residual_blocks, out_channels, stride):
-        identity_downsample = None
+        #identity_downsample = None
+        strides = [stride] + [1]*(num_residual_blocks - 1)
         layers = []
 
-        if stride != 1 or self.in_channels != out_channels * 4:
-            identity_downsample = nn.Sequential(nn.Conv2d(self.in_channels, out_channels*4,
-                                                          kernel_size=1, stride=stride, padding=0),
-                                                nn.BatchNorm2d(out_channels*4))
-        layers.append(block(self.in_channels, out_channels, identity_downsample, stride))
-        self.in_channels = out_channels*4
-
+        for stride in strides:
+            layers.append(block(self.in_channels, out_channels, stride))
+            self.in_channels = out_channels * block.expansion
+        """self.in_channels = out_channels*4
         for i in range(num_residual_blocks - 1):
-            layers.append(block(self.in_channels, out_channels))
-
+            layers.append(block(self.in_channels, out_channels))"""
         return nn.Sequential(*layers)
 
 
@@ -148,3 +157,14 @@ class ResnetFPN(nn.Module):
         C2, C3, C4, C5, _ = self.resnet(x)
         P2, P3, P4, P5, P6 = self.FPN(C2, C3, C4, C5)
         return P2, P3, P4, P5, P6
+
+def ResNet50(image_channels, num_classes):
+    return ResNet(block, [3, 4, 6, 3], image_channels, num_classes)
+
+
+def ResNet101(image_channels, num_classes):
+    return ResNet(block, [3, 4, 23, 3], image_channels, num_classes)
+
+
+def ResNet152(image_channels, num_classes):
+    return ResNet(block, [3, 8, 36, 3], image_channels, num_classes)

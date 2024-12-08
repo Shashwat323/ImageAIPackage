@@ -10,7 +10,7 @@ from tqdm import tqdm
 import loader
 import models
 import numpy as np
-from resnet import resnet, block
+import resnet
 import scipy
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -109,17 +109,9 @@ def validate(model, device, loader, loss_fn):
     print(f'Validation Loss: {avg_loss:.4f} || Validation Accuracy: {accuracy:.2f}%')
     return avg_loss, accuracy
 
-def ResNet50(img_channels=3, num_classes=1000):
-    return resnet(block, [3, 4, 6, 3], img_channels, num_classes)
-
-def ResNet101(img_channels=3, num_classes=1000):
-    return resnet(block, [3, 4, 23, 3], img_channels, num_classes)
-
-def ResNet152(img_channels=3, num_classes=1000):
-    return resnet(block, [3, 8, 36, 3], img_channels, num_classes)
 # Main training loop
 if __name__ == "__main__":
-    model = ResNet50(img_channels, num_classes).to(device)
+    model = resnet.ResNet50(img_channels, num_classes).to(device)
     optimizer = optim.Adam(model.parameters(), lr=start_lr)
     loss_fn = nn.CrossEntropyLoss()
 
