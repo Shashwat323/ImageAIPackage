@@ -67,7 +67,7 @@ class ResNet(nn.Module):
         out = self.conv1(x)
         out = self.bn1(out)
         out = nn.functional.relu(out)
-        out = self.maxpool(out)
+        #out = self.maxpool(out)
 
         C1 = self.layer1(out)
         C2 = self.layer2(C1)
