@@ -253,6 +253,7 @@ def meanNormalisation(img: np.ndarray,greyscale: bool=False):
     # Normalize grayscale
     mean_normalized = (grey_img - mean) / (max_val - min_val)
     return mean_normalized
+
 def crop(img: np.ndarray, new_width: int = float('inf')) -> np.ndarray:
     """
     Crop an image to the given width or the image's smallest dimension, whichever is smaller.
