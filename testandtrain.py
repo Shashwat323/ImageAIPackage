@@ -54,7 +54,7 @@ classes = ('plane', 'car', 'bird', 'cat', 'deer',
            'dog', 'frog', 'horse', 'ship', 'truck')
 
 print('==> Building model..')
-net = resnet.ResNet101(3, 10)
+net = resnet.ResNet152(3, 10)
 #net.load_state_dict(torch.load('ckpt.pth', weights_only=False, map_location='cpu')['net'])
 net = net.to(device)
 
@@ -118,7 +118,7 @@ def test(epoch):
         }
         if not os.path.isdir('checkpoint'):
             os.mkdir('checkpoint')
-        torch.save(state, './checkpoint/resnet101.pth')
+        torch.save(state, './checkpoint/resnet152.pth')
         best_acc = acc
 
 """def test_image(img):
