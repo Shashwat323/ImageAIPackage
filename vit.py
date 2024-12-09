@@ -23,11 +23,8 @@ class ModularLinear(nn.Module):
         return x
 
 def get_model(**kwargs):
-    device = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
-
     model = vit_h_14(weights='IMAGENET1K_SWAG_LINEAR_V1')
-    model.to(device)
-    heads = ModularLinear(**kwargs).to(device)
+    heads = ModularLinear(**kwargs)
     for param in model.parameters():
         param.requires_grad = False
     model.heads = heads
