@@ -18,7 +18,7 @@ from torch.utils.data import DataLoader
 from torch.utils.data import random_split
 
 
-resize_to = partial(iap.resize, new_width=518)
+resize_to = partial(iap.resize, new_width=224)
 number_resize_to = partial(iap.resize, new_width=28)
 demo_resize_to = partial(iap.resize, new_width=32)
 flower_resize_to = partial(iap.resize, new_width=518)
@@ -38,6 +38,9 @@ augment = iap.TransformPipeline([
 ])
 
 tensor = iap.TransformPipeline([
+    iap.img_to_numpy_array,
+    iap.crop,
+    resize_to,
     transforms.ToTensor(),  # Converts PIL Image or NumPy ndarray to tensor and scales to [0, 1]
     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])  # Normalize with ImageNet statistics
 ])
@@ -218,7 +221,7 @@ def train_val_split(dataset):
 
 
 # get dataloaders
-def get_dataloaders(batch_size=16, root="", dataset_type = "default"):
+def get_dataloaders(batch_size=16, root="", dataset_type = "default", augmentations=5):
     train_val_dataset = None
     test_dataset = None
     if dataset_type == "default":
@@ -240,8 +243,8 @@ def get_dataloaders(batch_size=16, root="", dataset_type = "default"):
         )
         train_val_dataset = TransformedImageDataset(train_val_dataset)
         test_dataset = TransformedImageDataset(test_dataset)
-        train_val_dataset = AugmentedImageDataset(train_val_dataset, augment)
-        test_dataset = AugmentedImageDataset(test_dataset, augment)
+        train_val_dataset = AugmentedImageDataset(train_val_dataset, augment, augmentations)
+        test_dataset = AugmentedImageDataset(test_dataset, augment, augmentations)
         train_val_dataset = TransformedImageDataset(train_val_dataset, tensor)
         test_dataset = TransformedImageDataset(test_dataset, tensor)
 
