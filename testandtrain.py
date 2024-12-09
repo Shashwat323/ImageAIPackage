@@ -5,7 +5,7 @@ import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
 import torch.backends.cudnn as cudnn
-import imageaipackage as iap
+#import imageaipackage as iap
 import torchvision.transforms.functional as func
 
 import torchvision
@@ -121,7 +121,7 @@ def test(epoch):
         torch.save(state, './checkpoint/resnet152.pth')
         best_acc = acc
 
-def test_image(img):
+"""def test_image(img):
     img = iap.img_to_numpy_array(img)
     img = iap.resize(img, 32)
     img = func.to_tensor(img)
@@ -136,7 +136,7 @@ def test_image(img):
         cv2.namedWindow("output", cv2.WINDOW_NORMAL)    # Create window with freedom of dimensions                 # Read image
         img = cv2.resize(imgnp, (64, 64))                # Resize image
         cv2.imshow("output", img)                       # Show image
-        cv2.waitKey(0)
+        cv2.waitKey(0)"""
 
 
 if __name__ == '__main__':
