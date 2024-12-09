@@ -14,7 +14,7 @@ def objective(config):  # ①
     train_loader, test_loader, val_loader = loader.get_dataloaders(batch_size=64, root=root,
                                                        dataset_type="cifar10", augmentations=config["augmentations"])  # Load some data
     model = adjustibleresnet.ResNet50(image_channels=3, num_classes=10, dropout=config["dropout"],
-                                      linear_neurons=config["linear_neurons"], initial_out=config["initial_out"])
+                                      initial_out=config["initial_out"])
     for param in model.parameters():
         param.requires_grad = True
     optimizer = torch.optim.Adam(model.parameters(), lr=config["lr"])
@@ -32,7 +32,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     root = args.root
 
-    search_space = {"linear_neurons": tune.randint(1024, 4096), "initial_out": tune.randint(32, 128),
+    search_space = {"initial_out": tune.randint(32, 128),
                     "dropout": tune.uniform(0.2, 0.5), "augmentations": tune.randint(5,20),
                     "lr": tune.loguniform(1e-5, 1e-2)}
     algo = OptunaSearch()  # ②
