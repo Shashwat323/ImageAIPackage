@@ -11,7 +11,7 @@ import torch.nn as nn
 root = "D:\\Other\\Repos\\ImageAIPackage"
 
 def objective(config):  # ①
-    train_loader, test_loader, val_loader = loader.get_dataloaders(batch_size=256, root=root,
+    train_loader, test_loader, val_loader = loader.get_dataloaders(batch_size=128, root=root,
                                                        dataset_type="cifar10")  # Load some data
     model = vit.get_model(hidden_neurons=config["hidden_neurons"], hidden_layers=config["hidden_layers"],
                               in_features=1280, dropout=config["dropout"]) # Create a PyTorch conv net
