@@ -17,6 +17,8 @@ def train(train_loader, model, loss_fn, optimizer, progress_bar = True):
     correct = 0
     if progress_bar:
         progress_bar = tqdm(enumerate(train_loader), total=len(train_loader))
+    else:
+        progress_bar = enumerate(train_loader)
     # Train
     model.train()
     for batch, (X, y) in progress_bar:
