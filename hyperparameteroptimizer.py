@@ -12,10 +12,12 @@ root = "D:\\Other\\Repos\\ImageAIPackage"
 batch_size = 64
 
 def objective(config):  # ①
+    device = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
     train_loader, test_loader, val_loader = loader.get_dataloaders(batch_size=batch_size, root=root,
                                                        dataset_type="cifar10", augmentations=config["augmentations"])  # Load some data
     model = adjustibleresnet.ResNet50(image_channels=3, num_classes=10, dropout=config["dropout"],
                                       initial_out=config["initial_out"])
+    model.to(device)
     for param in model.parameters():
         param.requires_grad = True
     optimizer = torch.optim.Adam(model.parameters(), lr=config["lr"])
