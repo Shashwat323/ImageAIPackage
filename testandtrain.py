@@ -1,9 +1,12 @@
 '''Train CIFAR10 with PyTorch.'''
+import cv2
 import torch
 import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
 import torch.backends.cudnn as cudnn
+import imageaipackage as iap
+import torchvision.transforms.functional as func
 
 import torchvision
 import torchvision.transforms as transforms
@@ -14,7 +17,6 @@ import argparse
 from models import *
 from utilsfortrainandtest import progress_bar
 import resnet
-
 
 parser = argparse.ArgumentParser(description='PyTorch CIFAR10 Training')
 parser.add_argument('--lr', default=0.1, type=float, help='learning rate')
@@ -51,32 +53,15 @@ testloader = torch.utils.data.DataLoader(
 classes = ('plane', 'car', 'bird', 'cat', 'deer',
            'dog', 'frog', 'horse', 'ship', 'truck')
 
-# Model
 print('==> Building model..')
-# net = VGG('VGG19')
-net = resnet.ResNet50(3, 10)
-# net = PreActResNet18()
-# net = GoogLeNet()
-# net = DenseNet121()
-# net = ResNeXt29_2x64d()
-# net = MobileNet()
-# net = MobileNetV2()
-# net = DPN92()
-# net = ShuffleNetG2()
-# net = SENet18()
-# net = ShuffleNetV2(1)
-# net = EfficientNetB0()
-# net = RegNetX_200MF()
-#net = SimpleDLA()
+net = resnet.ResNet152(3, 10)
+#net.load_state_dict(torch.load('ckpt.pth', weights_only=False, map_location='cpu')['net'])
 net = net.to(device)
-#if device == 'cuda':
-    #net = torch.nn.DataParallel(net)
-    #cudnn.benchmark = True
 
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.SGD(net.parameters(), lr=args.lr,
                       momentum=0.9, weight_decay=5e-4)
-scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=30)
+scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200)
 
 # Training
 def train(epoch):
@@ -133,11 +118,32 @@ def test(epoch):
         }
         if not os.path.isdir('checkpoint'):
             os.mkdir('checkpoint')
-        torch.save(state, './checkpoint/ckpt.pth')
+        torch.save(state, './checkpoint/resnet152.pth')
         best_acc = acc
 
+def test_image(img):
+    img = iap.img_to_numpy_array(img)
+    img = iap.resize(img, 32)
+    img = func.to_tensor(img)
 
-for epoch in range(start_epoch, start_epoch+200):
-    train(epoch)
-    test(epoch)
-    scheduler.step()
+    net.eval()
+    with torch.no_grad():
+        result = net.forward(img.unsqueeze(0))
+        _, prediction = result.max(1)
+        print('Model Predicts the image is:', classes[prediction])
+        img = img.permute(1, 2, 0)
+        imgnp = img.numpy()
+        cv2.namedWindow("output", cv2.WINDOW_NORMAL)    # Create window with freedom of dimensions                 # Read image
+        img = cv2.resize(imgnp, (64, 64))                # Resize image
+        cv2.imshow("output", img)                       # Show image
+        cv2.waitKey(0)
+
+
+if __name__ == '__main__':
+    #test_image('unit_test_images/CAT1.jpg')
+    #test(0)
+
+    for epoch in range(start_epoch, start_epoch+200):
+        train(epoch)
+        test(epoch)
+        scheduler.step()
