@@ -5,6 +5,7 @@ from functools import partial
 import numpy as np
 import idx2numpy
 import cv2
+import torch
 import torchvision
 from torchvision import transforms
 
@@ -95,6 +96,8 @@ def cifar_index_to_label(index):
         return classes[index]
     else:
         raise IndexError(f"Index out of range: {index}")
+
+
 
 class UbyteImageDataset(Dataset):
     def __init__(self, root_dir, img_file, label_file, transform=None, label_transform=None):
@@ -221,7 +224,7 @@ def train_val_split(dataset):
 
 
 # get dataloaders
-def get_dataloaders(batch_size=16, root="", dataset_type = "default", augmentations=5):
+def get_dataloaders(batch_size=16, root="", dataset_type = "default", augmentations=5, fraction=1.0):
     train_val_dataset = None
     test_dataset = None
     if dataset_type == "default":
@@ -256,6 +259,19 @@ def get_dataloaders(batch_size=16, root="", dataset_type = "default", augmentati
         test_dataset = TransformedImageDataset(test_dataset, number_tensor)
 
     train_dataset, val_dataset = train_val_split(train_val_dataset)
+
+    def get_fraction_indices(dataset, fraction):
+        num_samples = int(len(dataset) * fraction)
+        indices = torch.randperm(len(dataset))[:num_samples]
+        return indices
+
+    # Subset datasets based on fraction
+    train_indices = get_fraction_indices(train_dataset, fraction)
+    val_indices = get_fraction_indices(val_dataset, fraction)
+    test_indices = get_fraction_indices(test_dataset, fraction)
+    train_dataset = torch.utils.data.Subset(train_dataset, train_indices)
+    val_dataset = torch.utils.data.Subset(val_dataset, val_indices)
+    test_dataset = torch.utils.data.Subset(val_dataset, test_indices)
 
     train_loader = DataLoader(train_dataset, batch_size=batch_size,  shuffle=True)
     val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)

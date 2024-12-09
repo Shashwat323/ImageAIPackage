@@ -10,11 +10,13 @@ import torch.nn as nn
 
 root = "D:\\Other\\Repos\\ImageAIPackage"
 batch_size = 64
+fraction = 1.0
 
 def objective(config):  # ①
     device = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
     train_loader, test_loader, val_loader = loader.get_dataloaders(batch_size=batch_size, root=root,
-                                                       dataset_type="cifar10", augmentations=config["augmentations"])  # Load some data
+                                                       dataset_type="cifar10", augmentations=config["augmentations"],
+                                                                   fraction=fraction)  # Load some data
     model = adjustibleresnet.ResNet50(image_channels=3, num_classes=10, dropout=config["dropout"],
                                       initial_out=config["initial_out"])
     model.to(device)
@@ -33,9 +35,11 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--root', type=str, default="D:\\Other\\Repos\\ImageAIPackage", help='set to root directory (where ImageAIPackage is located)')
     parser.add_argument('--batch_size', type=int, default=64, help='set to batch size')
+    parser.add_argument('--fraction', type=float, default=1.0, help='set to fraction of dataset to use')
     args = parser.parse_args()
     root = args.root
     batch_size = args.batch_size
+    fraction = args.fraction
 
     search_space = {"initial_out": tune.randint(32, 128),
                     "dropout": tune.uniform(0.2, 0.5), "augmentations": tune.randint(5,20),
