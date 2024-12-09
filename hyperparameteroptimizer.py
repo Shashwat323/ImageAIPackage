@@ -4,17 +4,17 @@ import torch
 from ray import train, tune
 from ray.tune.search.optuna import OptunaSearch
 import run
-import vit
+import adjustibleresnet
 import loader
 import torch.nn as nn
 
 root = "D:\\Other\\Repos\\ImageAIPackage"
 
 def objective(config):  # ①
-    train_loader, test_loader, val_loader = loader.get_dataloaders(batch_size=128, root=root,
-                                                       dataset_type="cifar10")  # Load some data
-    model = vit.get_model(hidden_neurons=config["hidden_neurons"], hidden_layers=config["hidden_layers"],
-                              in_features=1280, dropout=config["dropout"]) # Create a PyTorch conv net
+    train_loader, test_loader, val_loader = loader.get_dataloaders(batch_size=64, root=root,
+                                                       dataset_type="cifar10", augmentations=config["augmentations"])  # Load some data
+    model = adjustibleresnet.ResNet50(image_channels=3, num_classes=10, dropout=config["dropout"],
+                                      linear_neurons=config["linear_neurons"], initial_out=config["initial_out"])
     for param in model.parameters():
         param.requires_grad = True
     optimizer = torch.optim.Adam(model.parameters(), lr=config["lr"])
@@ -32,9 +32,9 @@ if __name__ == "__main__":
     args = parser.parse_args()
     root = args.root
 
-    search_space = {"hidden_neurons": tune.randint(640, 2560), "hidden_layers": tune.randint(1, 4),
-                    "dropout": tune.uniform(0.2, 0.5),
-                    "lr": tune.uniform(1e-5, 1e-2)}
+    search_space = {"linear_neurons": tune.randint(1024, 4096), "initial_out": tune.randint(32, 128),
+                    "dropout": tune.uniform(0.2, 0.5), "augmentations": tune.randint(5,20),
+                    "lr": tune.loguniform(1e-5, 1e-2)}
     algo = OptunaSearch()  # ②
 
     trainable_with_gpu = tune.with_resources(objective, {"gpu": 1})
