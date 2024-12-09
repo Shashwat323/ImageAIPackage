@@ -20,6 +20,8 @@ from torch.utils.data import random_split
 
 resize_to = partial(iap.resize, new_width=518)
 number_resize_to = partial(iap.resize, new_width=28)
+demo_resize_to = partial(iap.resize, new_width=32)
+flower_resize_to = partial(iap.resize, new_width=518)
 
 normalize = iap.TransformPipeline([
     iap.img_to_numpy_array,
@@ -32,11 +34,18 @@ augment = iap.TransformPipeline([
     iap.mirror_image,
     iap.adjust_brightness,
     iap.adjust_contrast,
-    iap.adjust_hue,
     iap.square_rotate
 ])
 
 tensor = iap.TransformPipeline([
+    transforms.ToTensor(),  # Converts PIL Image or NumPy ndarray to tensor and scales to [0, 1]
+    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])  # Normalize with ImageNet statistics
+])
+
+demo_tensor = iap.TransformPipeline([
+    iap.img_to_numpy_array,
+    iap.crop,
+    demo_resize_to,
     transforms.ToTensor(),  # Converts PIL Image or NumPy ndarray to tensor and scales to [0, 1]
     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])  # Normalize with ImageNet statistics
 ])
@@ -48,6 +57,14 @@ number_tensor = iap.TransformPipeline([
     iap.convert_to_grey,
     transforms.ToTensor(),  # Converts PIL Image or NumPy ndarray to tensor and scales to [0, 1]
     transforms.Normalize(mean=[0.5,], std=[0.5,])  # Normalize with ImageNet statistics
+])
+
+flower_tensor = iap.TransformPipeline([
+    iap.img_to_numpy_array,
+    iap.crop,
+    flower_resize_to,
+    transforms.ToTensor(),  # Converts PIL Image or NumPy ndarray to tensor and scales to [0, 1]
+    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])  # Normalize with ImageNet statistics
 ])
 
 def flower_label_to_index(x):
@@ -62,6 +79,14 @@ def flower_label_to_index(x):
 def flower_index_to_label(index):
     classes = ["sunflower", "dandelion", "daisy", "tulip", "rose"]
 
+    if 0 <= index < len(classes):
+        # Return the class corresponding to the index
+        return classes[index]
+    else:
+        raise IndexError(f"Index out of range: {index}")
+
+def cifar_index_to_label(index):
+    classes = ["airplane", "automobile", "bird", "cat", "deer", "dog", "frog", "horse", "ship", "truck"]
     if 0 <= index < len(classes):
         # Return the class corresponding to the index
         return classes[index]
