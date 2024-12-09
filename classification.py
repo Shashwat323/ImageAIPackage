@@ -20,7 +20,7 @@ img_channels = 3
 num_classes = 10
 start_lr = 0.1
 num_epochs = 60
-model_save_path = 'ckpt.pth'
+model_save_path = 'weights/ckpt.pth'
 
 transform_train = transforms.Compose([
     transforms.RandomCrop(32, padding=4),
@@ -114,7 +114,7 @@ def validate(model, device, loader, loss_fn):
 if __name__ == "__main__":
     model = resnet.ResNet50(3, 10)
     print("here")
-    model.load_state_dict(torch.load('ckpt.pth', weights_only=False, map_location='cpu')['net'])
+    model.load_state_dict(torch.load('weights/ckpt.pth', weights_only=False, map_location='cpu')['net'])
     optimizer = optim.Adam(model.parameters(), lr=start_lr)
     loss_fn = nn.CrossEntropyLoss()
     print("here")
