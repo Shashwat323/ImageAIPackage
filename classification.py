@@ -12,14 +12,15 @@ import models
 import numpy as np
 import resnet
 import scipy
+import idx2numpy
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
-batch_size = 128
+batch_size = 1
 img_channels = 3
 num_classes = 10
 start_lr = 0.1
 num_epochs = 60
-model_save_path = 'resnet50_cifar10.pth'
+model_save_path = 'ckpt.pth'
 
 transform_train = transforms.Compose([
     transforms.RandomCrop(32, padding=4),
@@ -111,11 +112,15 @@ def validate(model, device, loader, loss_fn):
 
 # Main training loop
 if __name__ == "__main__":
-    model = resnet.ResNet50(img_channels, num_classes).to(device)
+    model = resnet.ResNet50(3, 10)
+    print("here")
+    model.load_state_dict(torch.load('ckpt.pth', weights_only=False, map_location='cpu')['net'])
     optimizer = optim.Adam(model.parameters(), lr=start_lr)
     loss_fn = nn.CrossEntropyLoss()
-
-    train_losses = []
+    print("here")
+    valid_loss, valid_acc = validate(model, device, valid_loader, loss_fn)
+    print("here")
+    """train_losses = []
     train_accuracies = []
     valid_losses = []
     valid_accuracies = []
@@ -136,5 +141,5 @@ if __name__ == "__main__":
                 update_lr(optimizer, start_lr)
 
     torch.save(model.state_dict(), model_save_path)
-    print(f"Model saved to {model_save_path}")
+    print(f"Model saved to {model_save_path}")"""
 
