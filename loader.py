@@ -34,7 +34,6 @@ augment = iap.TransformPipeline([
     iap.mirror_image,
     iap.adjust_brightness,
     iap.adjust_contrast,
-    iap.adjust_hue,
     iap.square_rotate
 ])
 
