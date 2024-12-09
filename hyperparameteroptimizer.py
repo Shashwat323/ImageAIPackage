@@ -37,10 +37,10 @@ if __name__ == "__main__":
                     "lr": tune.uniform(1e-5, 1e-2)}
     algo = OptunaSearch()  # ②
 
-    trainable_with_cpu_gpu = tune.with_resources(objective, {"cpu": 1, "gpu": 1})
+    trainable_with_gpu = tune.with_resources(objective, {"gpu": 1})
 
     tuner = tune.Tuner(  # ③
-        trainable_with_cpu_gpu,
+        trainable_with_gpu,
         tune_config=tune.TuneConfig(
             metric="mean_accuracy",
             mode="max",
