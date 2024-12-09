@@ -10,12 +10,12 @@ import numpy as np
 import argparse
 
 # train one epoch
-def train(train_loader, model, loss_fn, optimizer, progress_bar = True):
+def train(train_loader, model, loss_fn, optimizer, use_progress_bar = True):
     device = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
 
     total = 0
     correct = 0
-    if progress_bar:
+    if use_progress_bar:
         progress_bar = tqdm(enumerate(train_loader), total=len(train_loader))
     else:
         progress_bar = enumerate(train_loader)
@@ -39,7 +39,7 @@ def train(train_loader, model, loss_fn, optimizer, progress_bar = True):
         total += y.size(0)
         correct += (predicted == y).sum().item()
 
-        if progress_bar:
+        if use_progress_bar:
             progress_bar.set_postfix(loss=loss.item(), accuracy=100 * correct / total)
 
 
