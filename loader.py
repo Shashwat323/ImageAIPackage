@@ -271,7 +271,7 @@ def get_dataloaders(batch_size=16, root="", dataset_type = "default", augmentati
     test_indices = get_fraction_indices(test_dataset, fraction)
     train_dataset = torch.utils.data.Subset(train_dataset, train_indices)
     val_dataset = torch.utils.data.Subset(val_dataset, val_indices)
-    test_dataset = torch.utils.data.Subset(val_dataset, test_indices)
+    test_dataset = torch.utils.data.Subset(test_dataset, test_indices)
 
     train_loader = DataLoader(train_dataset, batch_size=batch_size,  shuffle=True)
     val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
