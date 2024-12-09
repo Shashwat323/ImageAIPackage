@@ -9,8 +9,7 @@ import loader
 
 
 def test_and_show(img_dir, weight_dir, to_tensor, model="default", label_transform=None):
-    device = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
-
+    device = "cpu"
     image = Image.open(img_dir)
     # open and transform image for vit
     image_vit = to_tensor(img_dir)
@@ -20,7 +19,8 @@ def test_and_show(img_dir, weight_dir, to_tensor, model="default", label_transfo
     # get model and predict
     model = get_model(model_type=model)
     model = model.to(device)
-    model.load_state_dict(torch.load(weight_dir, map_location=device))
+    model.load_state_dict(torch.load(weight_dir, map_location=device, weights_only=True))
+
     model.eval()
     with torch.no_grad():
         pred = model(image_vit)
@@ -38,5 +38,5 @@ def test_and_show(img_dir, weight_dir, to_tensor, model="default", label_transfo
 
 
 if __name__ == "__main__":
-    test_and_show("unit_test_images/one.png", 'D:\\Other\\Repos\\ImageAIPackage\\weights\\20241205_131821.pt',
-                  model="simple_cnn", to_tensor=loader.number_tensor)
+    test_and_show("unit_test_images/horse.jpg", 'D:\\Other\\Repos\\ImageAIPackage\\weights\\20241205_135518_cifar10.pt',
+                  model="cifar10_simple_cnn", to_tensor=loader.tensor, label_transform=loader.cifar_index_to_label)

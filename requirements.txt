@@ -8,3 +8,7 @@ torchvision~=0.20.1
 pandas~=2.2.3
 matplotlib~=3.9.2
 kagglehub~=0.3.4
+DateTime~=5.5
+tqdm~=4.67.1
+idx2numpy~=1.2.3
+ray~=2.40.0
