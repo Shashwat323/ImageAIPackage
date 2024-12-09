@@ -13,6 +13,8 @@ def objective(config):  # ①
     model = models.ModularSimpleCNN(num_classes=10, downsample=8, in_channels=3, hidden_neurons=config["hidden_neurons"],
                                     num_conv_layers=config["num_conv_layers"], expansion=config["expansion"],
                                     dropout=config["dropout"]) # Create a PyTorch conv net
+    for param in model.parameters():
+        param.requires_grad = True
     optimizer = torch.optim.Adam(model.parameters(), lr=config["lr"])
     loss_fn = nn.CrossEntropyLoss()
     while True:
