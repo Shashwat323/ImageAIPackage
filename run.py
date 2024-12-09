@@ -10,12 +10,13 @@ import numpy as np
 import argparse
 
 # train one epoch
-def train(train_loader, model, loss_fn, optimizer):
+def train(train_loader, model, loss_fn, optimizer, progress_bar = True):
     device = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
 
     total = 0
     correct = 0
-    progress_bar = tqdm(enumerate(train_loader), total=len(train_loader))
+    if progress_bar:
+        progress_bar = tqdm(enumerate(train_loader), total=len(train_loader))
     # Train
     model.train()
     for batch, (X, y) in progress_bar:
@@ -36,7 +37,8 @@ def train(train_loader, model, loss_fn, optimizer):
         total += y.size(0)
         correct += (predicted == y).sum().item()
 
-        progress_bar.set_postfix(loss=loss.item(), accuracy=100 * correct / total)
+        if progress_bar:
+            progress_bar.set_postfix(loss=loss.item(), accuracy=100 * correct / total)
 
 
 # validate and return mae loss

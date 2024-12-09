@@ -21,7 +21,7 @@ def objective(config):  # ①
     optimizer = torch.optim.Adam(model.parameters(), lr=config["lr"])
     loss_fn = nn.CrossEntropyLoss()
     while True:
-        run.train(train_loader, model, loss_fn, optimizer)  # Train the model
+        run.train(train_loader, model, loss_fn, optimizer, progress_bar=False)  # Train the model
         acc = run.test(test_loader, model, loss_fn)  # Compute test accuracy
         train.report({"mean_accuracy": acc})  # Report to Tune
 
