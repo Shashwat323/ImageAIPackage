@@ -2,7 +2,7 @@ import cv2
 import torch
 import torch.optim as optim
 import torch.nn as nn
-from torchvision.datasets import CIFAR10, FashionMNIST
+from torchvision.datasets import CIFAR10, FashionMNIST, ImageNet
 import torchvision.transforms as transforms
 import torch.utils.data as data
 import matplotlib.pyplot as plt
@@ -10,22 +10,31 @@ from tqdm import tqdm
 import loader
 import models
 import numpy as np
+import resnet
+import scipy
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
-batch_size = 64
-img_channels = 1
+batch_size = 128
+img_channels = 3
 num_classes = 10
 start_lr = 0.1
-num_epochs = 30
-model_save_path = 'FashionMnist_cifar10.pth'
+num_epochs = 60
+model_save_path = 'resnet50_cifar10.pth'
 
-transform = transforms.Compose([
-    transforms.ToTensor(),  # Convert PIL image or numpy.ndarray to tensor
-    transforms.Normalize((0.5), (0.5))
+transform_train = transforms.Compose([
+    transforms.RandomCrop(32, padding=4),
+    transforms.RandomHorizontalFlip(),
+    transforms.ToTensor(),
+    transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
 ])
 
-train_dataset = FashionMNIST(root='/root/RESNET/dataSet', train=True, download=True, transform=transform)
-valid_dataset = FashionMNIST(root='/root/RESNET/dataSet', train=False, download=False, transform=transform)
+transform_test = transforms.Compose([
+    transforms.ToTensor(),
+    transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+])
+
+train_dataset = CIFAR10(root='/root/RESNET/dataSet', train=True, download=True, transform=transform_train)
+valid_dataset = CIFAR10(root='/root/RESNET/dataSet', train=False, download=False, transform=transform_test)
 
 train_loader = data.DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
 valid_loader = data.DataLoader(valid_dataset, batch_size=batch_size, shuffle=False)
@@ -47,9 +56,13 @@ def train_step(model, device, loader, optimizer, loss_fn, epoch, lr):
     for i, (x, y) in progress_bar:
         x, y = x.to(device), y.to(device)
 
+        optimizer.zero_grad()
         # Forward pass
         y_hat = model(x)
         loss = loss_fn(y_hat, y)
+
+        loss.backward()
+        optimizer.step()
 
         # Accuracy calculation
         _, predicted = torch.max(y_hat.data, 1)
@@ -57,9 +70,6 @@ def train_step(model, device, loader, optimizer, loss_fn, epoch, lr):
         correct += (predicted == y).sum().item()
 
         # Backward pass
-        optimizer.zero_grad()
-        loss.backward()
-        optimizer.step()
 
         loss_log.append(loss.item())
 
@@ -99,18 +109,9 @@ def validate(model, device, loader, loss_fn):
     print(f'Validation Loss: {avg_loss:.4f} || Validation Accuracy: {accuracy:.2f}%')
     return avg_loss, accuracy
 
-def ResNet50(img_channels=3, num_classes=1000):
-    return models.resnet(models.block, [3, 4, 6, 3], img_channels, num_classes)
-
-def ResNet101(img_channels=3, num_classes=1000):
-    return models.resnet(models.block, [3, 4, 23, 3], img_channels, num_classes)
-
-def ResNet152(img_channels=3, num_classes=1000):
-    return models.resnet(models.block, [3, 8, 36, 3], img_channels, num_classes)
 # Main training loop
 if __name__ == "__main__":
-    model = ResNet101(img_channels, num_classes).to(device)
-    #model.load_state_dict(torch.load(model_save_path, weights_only=False, map_location=torch.device('cpu')))
+    model = resnet.ResNet50(img_channels, num_classes).to(device)
     optimizer = optim.Adam(model.parameters(), lr=start_lr)
     loss_fn = nn.CrossEntropyLoss()
 
