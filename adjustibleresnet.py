@@ -32,7 +32,7 @@ class Block(nn.Module):
         return out
 
 class ResNet(nn.Module):
-    def __init__(self, block, layers, image_channels, num_classes, dropout=0.5, linear_neurons = 2048, initial_out = 64):
+    def __init__(self, block, layers, image_channels, num_classes, dropout=0.5, initial_out = 64):
         super(ResNet, self).__init__()
         self.in_channels = initial_out
         self.dropout = nn.Dropout(dropout)
@@ -52,7 +52,7 @@ class ResNet(nn.Module):
         self.layer4 = self.make_layer(block, layers[3], out_channels=initial_out*8, stride=2)
 
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
-        self.linear = nn.Linear(linear_neurons, num_classes)
+        self.linear = nn.Linear(initial_out*16, num_classes)
 
     def forward(self, x):
         out = self.conv1(x)
@@ -82,8 +82,8 @@ class ResNet(nn.Module):
 
 
 
-def ResNet50(image_channels, num_classes, dropout, linear_neurons, initial_out):
-    return ResNet(Block, [3, 4, 6, 3], image_channels, num_classes, dropout, linear_neurons, initial_out)
+def ResNet50(image_channels, num_classes, dropout, initial_out):
+    return ResNet(Block, [3, 4, 6, 3], image_channels, num_classes, dropout, initial_out)
 
 
 def ResNet101(image_channels, num_classes):
