@@ -28,7 +28,7 @@ def objective(config):  # ①
     while True:
         run.train(train_loader, model, loss_fn, optimizer, use_progress_bar=use_progress_bar)  # Train the model
         acc = run.test(test_loader, model, loss_fn)  # Compute test accuracy
-        train.report({"mean_accuracy": acc})  # Report to Tune
+        train.report({"mean_loss": acc})  # Report to Tune
 
 
 
@@ -54,8 +54,8 @@ if __name__ == "__main__":
     tuner = tune.Tuner(  # ③
         trainable_with_gpu,
         tune_config=tune.TuneConfig(
-            metric="mean_accuracy",
-            mode="max",
+            metric="mean_loss",
+            mode="min",
             search_alg=algo,
             num_samples=100,
         ),
