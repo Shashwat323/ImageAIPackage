@@ -5,6 +5,9 @@ import torch.optim as optim
 from torchvision.models import vit_h_14
 import torch.nn.functional as F
 
+import adjustibleresnet
+
+
 class ImageHead(nn.Module):
     def __init__(self):
         super(ImageHead, self).__init__()
@@ -94,6 +97,11 @@ def get_model(model_type="default"):
                 param.requires_grad = True
         case "cifar10_simple_cnn":
             model = SimpleCNN(downsample=8, in_channels=3)
+            for param in model.parameters():
+                param.requires_grad = True
+        case "resnet50":
+            model = adjustibleresnet.ResNet50(image_channels=3, num_classes=10, dropout=0.5,
+                                              initial_out=49)
             for param in model.parameters():
                 param.requires_grad = True
     model.heads = heads

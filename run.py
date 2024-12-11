@@ -148,13 +148,15 @@ if __name__ == "__main__":
     parser.add_argument('--root', type=str, default="", help='set to root directory (where ImageAIPackage is located)')
     parser.add_argument('--dataset', type=str, default="")
     parser.add_argument('--model', type=str, default="")
-    parser.add_argument('--epochs', type=int, default=10, help='number of epochs to train for')
+    parser.add_argument('--epochs', type=int, default=10, help='number of epochs to train for (default: 10)')
+    parser.add_argument('--batch_size', type=int, default=64, help='input batch size for training (default: 64)')
     args = parser.parse_args()
 
-    train_loader, val_loader, test_loader = get_dataloaders(64, root=args.root, dataset_type=args.dataset)
+    train_loader, val_loader, test_loader = get_dataloaders(batch_size=args.batch_size, root=args.root, dataset_type=args.dataset,
+                                                            augmentations=20)
     model = get_model(model_type=args.model).float().to(device)
     loss_fn = nn.CrossEntropyLoss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
+    optimizer = torch.optim.Adam(model.parameters(), lr=5e-5)
     epochs = args.epochs
     early_stopping = EarlyStopping(patience=3, verbose=True, delta=0, root=args.root)
 
@@ -167,7 +169,7 @@ if __name__ == "__main__":
         if early_stopping.early_stop:
             print("Early stopping")
             break
-    model.load_state_dict(torch.load(args.root + f'/weights/{generate_timestamp_string()}.pt'))
-    test(test_loader, model, loss_fn)
+    #model.load_state_dict(torch.load(args.root + f'/weights/{generate_timestamp_string()}.pt'))
+    #test(test_loader, model, loss_fn)
 
     print("Done!")
