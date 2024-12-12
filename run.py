@@ -150,11 +150,15 @@ if __name__ == "__main__":
     parser.add_argument('--model', type=str, default="")
     parser.add_argument('--epochs', type=int, default=10, help='number of epochs to train for (default: 10)')
     parser.add_argument('--batch_size', type=int, default=64, help='input batch size for training (default: 64)')
+    parser.add_argument('--model_path', type=str, default="", help='path to existing model, else leave blank to train new one')
     args = parser.parse_args()
 
     train_loader, val_loader, test_loader = get_dataloaders(batch_size=args.batch_size, root=args.root, dataset_type=args.dataset,
                                                             augmentations=20)
-    model = get_model(model_type=args.model).float().to(device)
+    if args.model_path == "":
+        model = get_model(model_type=args.model).float().to(device)
+    else:
+        model = torch.load(args.model_path)
     loss_fn = nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=5e-5)
     epochs = args.epochs
