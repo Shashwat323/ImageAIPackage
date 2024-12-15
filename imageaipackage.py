@@ -4,10 +4,8 @@ import itertools
 import numpy as np
 import random
 import rembg
-import onnxruntime
 from typing import Callable, List, Union
 from PIL import Image, ImageOps, ImageEnhance
-import os
 
 def overlay_images(base_image_array: np.ndarray, overlay_image_array: np.ndarray, transparency: float = 1.0):
     if not (0.0 <= transparency <= 1.0):

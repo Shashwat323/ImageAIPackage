@@ -2,9 +2,8 @@ from PIL import Image
 from matplotlib import pyplot as plt
 
 import torch
-from torchvision.transforms import ToTensor
 
-from models import get_model
+from models.models import get_model
 import loader
 
 

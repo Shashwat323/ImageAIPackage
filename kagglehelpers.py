@@ -3,8 +3,6 @@ import argparse
 import kagglehub
 import os
 import shutil
-import torchvision
-from torchvision import transforms
 
 def dataset_importer(dataset_name, dest_folder="dataset"):
     current_dir = os.getcwd()
