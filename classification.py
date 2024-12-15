@@ -1,18 +1,12 @@
-import cv2
 import torch
-import torch.optim as optim
 import torch.nn as nn
-from torchvision.datasets import CIFAR10, FashionMNIST, ImageNet
-import torchvision.transforms as transforms
+import torch.optim as optim
 import torch.utils.data as data
-import matplotlib.pyplot as plt
-from tqdm import tqdm
-import loader
-import models
-import numpy as np
-import resnet
-import scipy
-import idx2numpy
+import torchvision.transforms as transforms
+from torchvision.datasets import CIFAR10
+
+import run
+from models import resnet
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 batch_size = 1
@@ -45,71 +39,6 @@ def update_lr(optimizer, lr):
     for param_group in optimizer.param_groups:
         param_group['lr'] = lr
 
-# Training step function
-def train_step(model, device, loader, optimizer, loss_fn, epoch, lr):
-    model.train()
-    total = 0
-    correct = 0
-    loss_log = []
-
-    progress_bar = tqdm(enumerate(loader), total=len(loader), desc=f"Epoch {epoch}/{num_epochs}")
-
-    for i, (x, y) in progress_bar:
-        x, y = x.to(device), y.to(device)
-
-        optimizer.zero_grad()
-        # Forward pass
-        y_hat = model(x)
-        loss = loss_fn(y_hat, y)
-
-        loss.backward()
-        optimizer.step()
-
-        # Accuracy calculation
-        _, predicted = torch.max(y_hat.data, 1)
-        total += y.size(0)
-        correct += (predicted == y).sum().item()
-
-        # Backward pass
-
-        loss_log.append(loss.item())
-
-        # Update progress bar
-        progress_bar.set_postfix(loss=loss.item(), accuracy=100 * correct / total)
-
-    avg_loss = sum(loss_log) / len(loss_log)
-    accuracy = 100 * correct / total
-    print(f'Epoch {epoch} || Training Loss: {avg_loss:.4f} || Lr: {lr} || Training Accuracy: {accuracy:.2f}%')
-    return avg_loss, accuracy
-
-# Validation step function
-def validate(model, device, loader, loss_fn):
-    model.eval()
-    total = 0
-    correct = 0
-    loss_log = []
-
-    with torch.no_grad():
-        for x, y in loader:
-            x, y = x.to(device), y.to(device)
-
-            # Forward pass
-            y_hat = model(x)
-            loss = loss_fn(y_hat, y)
-
-            # Accuracy calculation
-            _, predicted = torch.max(y_hat.data, 1)
-
-            total += y.size(0)
-            correct += (predicted == y).sum().item()
-
-            loss_log.append(loss.item())
-
-    avg_loss = sum(loss_log) / len(loss_log)
-    accuracy = 100 * correct / total
-    print(f'Validation Loss: {avg_loss:.4f} || Validation Accuracy: {accuracy:.2f}%')
-    return avg_loss, accuracy
-
 # Main training loop
 if __name__ == "__main__":
     model = resnet.ResNet50(3, 10)
@@ -118,7 +47,7 @@ if __name__ == "__main__":
     optimizer = optim.Adam(model.parameters(), lr=start_lr)
     loss_fn = nn.CrossEntropyLoss()
     print("here")
-    valid_loss, valid_acc = validate(model, device, valid_loader, loss_fn)
+    valid_loss, valid_acc = run.validate(model, device, valid_loader, loss_fn)
     print("here")
     """train_losses = []
     train_accuracies = []

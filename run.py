@@ -3,7 +3,7 @@ from datetime import datetime
 import torch
 import torch.nn as nn
 from loader import get_dataloaders
-from models import get_model
+from models.models import get_model
 from tqdm import tqdm
 
 import numpy as np
@@ -44,14 +44,21 @@ def train(train_loader, model, loss_fn, optimizer, use_progress_bar = True):
 
 
 # validate and return mae loss
-def validate(val_loader, model, loss_fn):
+def validate(val_loader, model, loss_fn, use_progress_bar=False):
     device = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
+
+    total = 0
+    correct = 0
+    if use_progress_bar:
+        progress_bar = tqdm(enumerate(val_loader), total=len(val_loader))
+    else:
+        progress_bar = enumerate(val_loader)
 
     # Validation
     model.eval()
     val_loss = 0
     with torch.no_grad():
-        for batch_idx, (X, y) in enumerate(val_loader):
+        for batch_idx, (X, y) in progress_bar:
             X = X.to(device)
             y = torch.tensor(y, dtype=torch.long).to(device)
 
@@ -59,6 +66,14 @@ def validate(val_loader, model, loss_fn):
 
             loss = loss_fn(pred, y)
             val_loss += loss.item()
+
+            # Accuracy calculation
+            _, predicted = torch.max(pred.data, 1)
+            total += y.size(0)
+            correct += (predicted == y).sum().item()
+
+            if use_progress_bar:
+                progress_bar.set_postfix(loss=loss.item(), accuracy=100 * correct / total)
 
     val_loss /= len(val_loader)
 
@@ -68,14 +83,21 @@ def validate(val_loader, model, loss_fn):
 
 
 # Test and return loss
-def test(test_loader, model, loss_fn):
+def test(test_loader, model, loss_fn, use_progress_bar=False):
     device = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
+
+    total = 0
+    correct = 0
+    if use_progress_bar:
+        progress_bar = tqdm(enumerate(test_loader), total=len(test_loader))
+    else:
+        progress_bar = enumerate(test_loader)
 
     # Test
     model.eval()
     test_loss = 0
     with torch.no_grad():
-        for batch_idx, (X, y) in enumerate(test_loader):
+        for batch_idx, (X, y) in progress_bar:
             X = X.to(device)
             y = torch.tensor(y, dtype=torch.long).to(device)
 
@@ -83,6 +105,14 @@ def test(test_loader, model, loss_fn):
 
             loss = loss_fn(pred, y)
             test_loss += loss.item()
+
+            # Accuracy calculation
+            _, predicted = torch.max(pred.data, 1)
+            total += y.size(0)
+            correct += (predicted == y).sum().item()
+
+            if use_progress_bar:
+                progress_bar.set_postfix(loss=loss.item(), accuracy=100 * correct / total)
 
     test_loss /= len(test_loader)
 
