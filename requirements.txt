@@ -1,11 +1,11 @@
 opencv-python~=4.10.0.84
-numpy~=2.0.2
+numpy~=1.26.0
 pillow~=11.0.0
 Flask~=3.1.0
 
 torch~=2.5.1
 torchvision~=0.20.1
-pandas~=2.2.3
+pandas~=2.2.2
 matplotlib~=3.9.2
 kagglehub~=0.3.4
 DateTime~=5.5
