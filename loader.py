@@ -23,6 +23,7 @@ resize_to = partial(iap.resize, new_width=224)
 number_resize_to = partial(iap.resize, new_width=28)
 demo_resize_to = partial(iap.resize, new_width=32)
 flower_resize_to = partial(iap.resize, new_width=518)
+image_gen_resize_to = partial(iap.resize, new_width=128)
 
 normalize = iap.TransformPipeline([
     iap.img_to_numpy_array,
@@ -69,6 +70,14 @@ flower_tensor = iap.TransformPipeline([
     flower_resize_to,
     transforms.ToTensor(),  # Converts PIL Image or NumPy ndarray to tensor and scales to [0, 1]
     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])  # Normalize with ImageNet statistics
+])
+
+image_gen_normalization = iap.TransformPipeline([
+    iap.img_to_numpy_array,
+    iap.crop,
+    image_gen_resize_to,
+    transforms.ToTensor(),  # Converts PIL Image or NumPy ndarray to tensor and scales to [0, 1]
+    transforms.Normalize(mean=[0.5,], std=[0.5,])  # Normalize with ImageNet statistics
 ])
 
 def flower_label_to_index(x):
@@ -233,6 +242,9 @@ def get_dataloaders(batch_size=16, root="", dataset_type = "default", augmentati
         train_val_dataset = AugmentedImageDataset(train_val_dataset, augment)
         train_val_dataset = TransformedImageDataset(train_val_dataset, tensor)
         test_dataset = TransformedImageDataset(test_dataset, tensor)
+    elif dataset_type == "default_image_gen":
+        train_val_dataset = FolderImageDataset(root + '/dataset/train', image_gen_normalization, flower_label_to_index)
+        test_dataset = FolderImageDataset(root + '/dataset/test', image_gen_normalization, flower_label_to_index)
     elif dataset_type == "cifar10":
         train_val_dataset = torchvision.datasets.CIFAR10(
             root=root,
