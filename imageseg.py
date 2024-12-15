@@ -13,5 +13,5 @@ results = model.train(data='C:/Users/cohen/OneDrive/Documents/GitHub/ImageAIPack
 img = cv2.imread("unit_test_images/ANIMALS3.jpg")
 
 results = model.predict(img)
-for result in results:
-    result.show()
+#for result in results:
+    #result.show()
