@@ -6,12 +6,12 @@ from ultralytics import YOLO
 HOME = os.getcwd()
 ultralytics.checks()
 
-model = YOLO(f'{HOME}/weights/yolov8n-seg.pt')
+model = YOLO(f'{HOME}/weights/yolov8x-seg.pt')
 
-results = model.train(data='C:/Users/cohen/OneDrive/Documents/GitHub/ImageAIPackage/datasets/jellyfishdataset/data.yaml', epochs=50, imgsz=640)
+results = model.train(data='C:/Users/cohen/OneDrive/Documents/GitHub/ImageAIPackage/datasets/turtle/data.yaml', epochs=10, imgsz=320)
 
-img = cv2.imread("unit_test_images/CATANDDOG.jpg")
+img = cv2.imread("unit_test_images/ANIMALS3.jpg")
 
 results = model.predict(img)
 for result in results:
-    result.save(filename="result.jpg")
+    result.show()
