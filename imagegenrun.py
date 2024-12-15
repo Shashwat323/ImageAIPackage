@@ -59,7 +59,7 @@ def train_loop(config, model, noise_scheduler, optimizer, train_dataloader, lr_s
         progress_bar.set_description(f"Epoch {epoch}")
 
         for step, batch in enumerate(train_dataloader):
-            clean_images = batch["images"]
+            clean_images = batch[0]
             # Sample noise to add to the images
             noise = torch.randn(clean_images.shape, device=clean_images.device)
             bs = clean_images.shape[0]
@@ -105,8 +105,8 @@ def train_loop(config, model, noise_scheduler, optimizer, train_dataloader, lr_s
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--root', type=str, default="D:\\Other\\Repos\\ImageAIPackage", help='set to root directory (where ImageAIPackage is located)')
-    parser.add_argument('--dataset', type=str, default="default")
-    parser.add_argument('--batch_size', type=int, default=64, help='input batch size for training (default: 64)')
+    parser.add_argument('--dataset', type=str, default="default_image_gen")
+    parser.add_argument('--batch_size', type=int, default=16, help='input batch size for training (default: 64)')
     args = parser.parse_args()
 
     model = unet2d.model
