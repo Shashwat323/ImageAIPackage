@@ -1,11 +1,11 @@
-from IPython import display
+#from IPython import display
 import os
 import ultralytics
 import cv2
 from ultralytics import YOLO
 
 HOME = os.getcwd()
-display.clear_output()
+#display.clear_output()
 ultralytics.checks()
 
 model = YOLO(f'{HOME}/weights/yolov8n-seg.pt')
