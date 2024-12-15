@@ -15,3 +15,5 @@ ray~=2.40.0
 rembg~=2.0.0
 scipy~=1.14.1
 optuna~=4.1.0
+diffusers~=0.31.0
+accelerate~=1.2.1
