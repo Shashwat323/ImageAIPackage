@@ -23,7 +23,7 @@ class instanceSegmentationModel:
         return self.model.predict(img)
 
 model = instanceSegmentationModel('yolov8s-seg.pt')
-results = model.trainModel(dataPath=f'{HOME}/ds/turtle/data.yaml', epochs=10, imgSize=320)
+results = model.trainModel(dataPath=f'{HOME}/datasets/turtle/data.yaml', epochs=10, imgSize=320)
 
 img = cv2.imread("unit_test_images/ANIMALS3.jpg")
 
