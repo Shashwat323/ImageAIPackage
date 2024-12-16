@@ -14,7 +14,7 @@ def trainModel(dataPath, epochs, imgSize):
 
 
 model = createModel(f'{HOME}/weights/yolov8x-seg.pt')
-results = model.train(data='C:/Users/cohen/OneDrive/Documents/GitHub/ImageAIPackage/datasets/turtle/data.yaml', epochs=10, imgsz=320)
+results = model.train(data='C:/Users/cohen/OneDrive/Documents/GitHub/ImageAIPackage/ds/turtle/data.yaml', epochs=10, imgsz=320)
 
 img = cv2.imread("unit_test_images/ANIMALS3.jpg")
 

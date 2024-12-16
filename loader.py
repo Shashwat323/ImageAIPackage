@@ -277,7 +277,7 @@ def get_dataloaders(batch_size=16, root="", dataset_type = "default", augmentati
         indices = torch.randperm(len(dataset))[:num_samples]
         return indices
 
-    # Subset datasets based on fraction
+    # Subset ds based on fraction
     train_indices = get_fraction_indices(train_dataset, fraction)
     val_indices = get_fraction_indices(val_dataset, fraction)
     test_indices = get_fraction_indices(test_dataset, fraction)
