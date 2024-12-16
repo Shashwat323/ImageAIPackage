@@ -10,7 +10,9 @@ class instanceSegmentationModel:
     def __init__(self, path=None):
         self.model = YOLO(path)
 
-    def trainModel(self, dataPath, epochs, imgSize):
+    def trainModel(self, dataPath, epochs, imgSize, weights=None):
+        if weights:
+            return self.model.train(data=dataPath, epochs=epochs, imgsz=imgSize, weights=weights)
         return self.model.train(data=dataPath, epochs=epochs, imgsz=imgSize)
 
     def testModel(self):
@@ -23,7 +25,7 @@ class instanceSegmentationModel:
         return self.model.predict(img)
 
 model = instanceSegmentationModel('yolov8s-seg.pt')
-results = model.trainModel(dataPath=f'{HOME}/datasets/turtle/data.yaml', epochs=10, imgSize=320)
+results = model.trainModel(dataPath=f'{HOME}/datasets/turtle/data.yaml', epochs=1, imgSize=320, weights='yolov8s-seg.pt')
 
 img = cv2.imread("unit_test_images/ANIMALS3.jpg")
 
