@@ -2,6 +2,7 @@ import argparse
 
 from diffusers.optimization import get_cosine_schedule_with_warmup
 from accelerate import Accelerator
+from safetensors.torch import load_model
 from tqdm.auto import tqdm
 from pathlib import Path
 from diffusers import DDPMPipeline
@@ -107,9 +108,13 @@ if __name__ == "__main__":
     parser.add_argument('--root', type=str, default="D:\\Other\\Repos\\ImageAIPackage", help='set to root directory (where ImageAIPackage is located)')
     parser.add_argument('--dataset', type=str, default="default_image_gen")
     parser.add_argument('--batch_size', type=int, default=16, help='input batch size for training (default: 64)')
+    parser.add_argument('--model_path', type=str, default="",
+                        help='path to existing model, else leave blank to train new one')
     args = parser.parse_args()
 
     model = unet2d.model
+    if args.model_path != "":
+        load_model(model, args.model_path)
     config = unet2d.config
     optimizer = torch.optim.AdamW(model.parameters(), lr=config.learning_rate)
     train_loader, val_loader, test_loader = loader.get_dataloaders(batch_size=args.batch_size, root=args.root,
@@ -123,4 +128,4 @@ if __name__ == "__main__":
     noise_scheduler = DDPMScheduler(num_train_timesteps=1000)
 
     args = (config, model, noise_scheduler, optimizer, train_loader, lr_scheduler)
-    notebook_launcher(train_loop, args, num_processes=1)
+    #notebook_launcher(train_loop, args, num_processes=1)
