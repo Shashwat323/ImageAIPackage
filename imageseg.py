@@ -15,18 +15,19 @@ class instanceSegmentationModel:
             return self.model.train(data=dataPath, epochs=epochs, imgsz=imgSize, weights=weights)
         return self.model.train(data=dataPath, epochs=epochs, imgsz=imgSize)
 
-    def testModel(self):
-        pass
-
     def validateModel(self):
-        pass
+        return self.model.val()
 
     def predict(self, img):
         return self.model.predict(img)
 
-model = instanceSegmentationModel('yolov8s-seg.pt')
-results = model.trainModel(dataPath=f'{HOME}/datasets/turtle/data.yaml', epochs=1, imgSize=320, weights='yolov8s-seg.pt')
+    def export(self, Format="onnx"):
+        return self.model.export(format=Format)
 
-img = cv2.imread("unit_test_images/ANIMALS3.jpg")
+model = instanceSegmentationModel('weights/yolov8x-seg.pt')
+results = model.trainModel(dataPath=f'{HOME}/datasets/branches/data.yaml', epochs=100, imgSize=640)
+model.validateModel()
+#img = cv2.imread("unit_test_images/ANIMALS3.jpg")
+#results = model.predict(img)
 
-results = model.predict(img)
+model.export(Format="onnx")
