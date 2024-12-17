@@ -19,15 +19,17 @@ class instanceSegmentationModel:
         return self.model.val()
 
     def predict(self, img):
-        return self.model.predict(img)
+        return self.model(img)
 
     def export(self, Format="onnx"):
         return self.model.export(format=Format)
 
 model = instanceSegmentationModel('weights/yolov8x-seg.pt')
-results = model.trainModel(dataPath=f'{HOME}/datasets/branches/data.yaml', epochs=100, imgSize=640)
+results = model.trainModel(dataPath=f'{HOME}/datasets/branches/data.yaml', epochs=250, imgSize=640)
 model.validateModel()
-#img = cv2.imread("unit_test_images/ANIMALS3.jpg")
-#results = model.predict(img)
+#model_onnx = YOLO("weights/best.pt")
+#img = cv2.imread("unit_test_images/TREE4.jpg")
+#results = model_onnx(img)
+#results[0].show()
 
 model.export(Format="onnx")
