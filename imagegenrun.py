@@ -134,4 +134,4 @@ if __name__ == "__main__":
     noise_scheduler = DDPMScheduler(num_train_timesteps=1000)
 
     args = (config, model, noise_scheduler, optimizer, train_loader, lr_scheduler)
-    #notebook_launcher(train_loop, args, num_processes=1)
+    notebook_launcher(train_loop, args, num_processes=1)
