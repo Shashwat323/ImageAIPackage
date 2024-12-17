@@ -1,4 +1,5 @@
 import argparse
+import json
 
 from diffusers.optimization import get_cosine_schedule_with_warmup
 from accelerate import Accelerator
@@ -110,11 +111,16 @@ if __name__ == "__main__":
     parser.add_argument('--batch_size', type=int, default=16, help='input batch size for training (default: 64)')
     parser.add_argument('--model_path', type=str, default="",
                         help='path to existing model, else leave blank to train new one')
+    parser.add_argument('--model_index_path', type=str, default="",
+                        help='path to existing model_index.json, else leave blank to train new one')
     args = parser.parse_args()
 
     model = unet2d.model
     if args.model_path != "":
-        model.load_state_dict(load_file(args.model_path))
+        with open(args.model_index_path, "r") as f:
+            model_index = json.load(f)
+        weights_file = str(os.path.join(args.model_path, model_index["unet"]))
+        model.load_state_dict(load_file(weights_file))
     config = unet2d.config
     optimizer = torch.optim.AdamW(model.parameters(), lr=config.learning_rate)
     train_loader, val_loader, test_loader = loader.get_dataloaders(batch_size=args.batch_size, root=args.root,
