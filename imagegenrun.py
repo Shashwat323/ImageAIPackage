@@ -2,13 +2,13 @@ import argparse
 
 from diffusers.optimization import get_cosine_schedule_with_warmup
 from accelerate import Accelerator
-from safetensors.torch import load_model
 from tqdm.auto import tqdm
 from pathlib import Path
 from diffusers import DDPMPipeline
 from diffusers.utils import make_image_grid
 import os
 import torch
+from safetensors.torch import load_file
 from PIL import Image
 from diffusers import DDPMScheduler
 from accelerate import notebook_launcher
@@ -114,7 +114,7 @@ if __name__ == "__main__":
 
     model = unet2d.model
     if args.model_path != "":
-        load_model(model, args.model_path)
+        model.load_state_dict(load_file(args.model_path))
     config = unet2d.config
     optimizer = torch.optim.AdamW(model.parameters(), lr=config.learning_rate)
     train_loader, val_loader, test_loader = loader.get_dataloaders(batch_size=args.batch_size, root=args.root,
