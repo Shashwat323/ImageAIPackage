@@ -3,3 +3,4 @@
 /numbers_dataset/
 weights/*
 !weights/weights.txt
+/cifar-10-batches-py/
