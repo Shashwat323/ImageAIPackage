@@ -61,6 +61,7 @@ def predict_image():
 
 
 
+
 # Flask route for image upload and preprocessing
 @app.route('/upload-image', methods=['POST'])
 def upload_image():
