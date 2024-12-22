@@ -4,3 +4,4 @@
 weights/*
 !weights/weights.txt
 /cifar-10-batches-py/
+/unit_test_images/
