@@ -31,6 +31,7 @@ class Block(nn.Module):
         out = nn.functional.relu(out)
         return out
 
+
 class ResNet(nn.Module):
     def __init__(self, block, layers, image_channels, num_classes, dropout=0.5, initial_out = 64):
         super(ResNet, self).__init__()
