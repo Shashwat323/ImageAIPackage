@@ -4,13 +4,10 @@ import json
 from diffusers.optimization import get_cosine_schedule_with_warmup
 from accelerate import Accelerator
 from tqdm.auto import tqdm
-from pathlib import Path
 from diffusers import DDPMPipeline
 from diffusers.utils import make_image_grid
 import os
 import torch
-from safetensors.torch import load_file
-from PIL import Image
 from diffusers import DDPMScheduler
 from accelerate import notebook_launcher
 import torch.nn.functional as F
@@ -109,18 +106,9 @@ if __name__ == "__main__":
     parser.add_argument('--root', type=str, default="D:\\Other\\Repos\\ImageAIPackage", help='set to root directory (where ImageAIPackage is located)')
     parser.add_argument('--dataset', type=str, default="default_image_gen")
     parser.add_argument('--batch_size', type=int, default=16, help='input batch size for training (default: 64)')
-    parser.add_argument('--model_path', type=str, default="",
-                        help='path to existing model, else leave blank to train new one')
-    parser.add_argument('--model_index_path', type=str, default="",
-                        help='path to existing model_index.json, else leave blank to train new one')
     args = parser.parse_args()
 
     model = unet2d.model
-    if args.model_path != "":
-        with open(args.model_index_path, "r") as f:
-            model_index = json.load(f)
-        weights_file = str(os.path.join(args.model_path, model_index["unet"]))
-        model.load_state_dict(load_file(weights_file))
     config = unet2d.config
     optimizer = torch.optim.AdamW(model.parameters(), lr=config.learning_rate)
     train_loader, val_loader, test_loader = loader.get_dataloaders(batch_size=args.batch_size, root=args.root,
