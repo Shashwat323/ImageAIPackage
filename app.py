@@ -1,3 +1,5 @@
+import os
+import uuid
 from io import BytesIO
 
 import torch
@@ -9,6 +11,8 @@ import pickle
 import adjustibleresnet as resnet
 import json
 app = Flask(__name__)
+app.config['UPLOAD_FOLDER']='api-uploads'
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
 # Map of supported preprocessing techniques
 PREPROCESSING_TECHNIQUES = {
@@ -56,6 +60,8 @@ def predict_image():
         return jsonify({"error": f"Failed to load the model: {str(e)}"}), 500
 
 
+
+
 # Flask route for image upload and preprocessing
 @app.route('/upload-image', methods=['POST'])
 def upload_image():
@@ -66,7 +72,14 @@ def upload_image():
     image_file = request.files['image']
     if not image_file:
         return jsonify({"error": "Invalid image file"}), 400
+    unique_id = str(uuid.uuid4())
+    filename = f"{unique_id}_{image_file.filename}"
+    filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+    image_file.save(filepath)
+    return jsonify({'message': 'Image file uploaded', 'image_id': unique_id})
 
+@app.route('/preprocess-image', methods=['POST'])
+def preprocess_image():
     # Load preprocessing technique
     technique = request.form.get('technique')
     if technique not in PREPROCESSING_TECHNIQUES:
@@ -74,7 +87,23 @@ def upload_image():
 
     # Open the image and preprocess it
     try:
-        image = Image.open(image_file)
+        image_id = request.form.get('image_id')
+        if not image_id:
+            return jsonify({"error": "Image ID not provided"}), 400
+
+        # Find the corresponding file
+        uploaded_images = os.listdir(app.config['UPLOAD_FOLDER'])
+        filepath = next(
+            (
+                os.path.join(app.config['UPLOAD_FOLDER'], f)
+                for f in uploaded_images if f.startswith(image_id)
+            ),
+            None,
+        )
+
+        if not filepath:
+            return jsonify({"error": f"No image found with ID '{image_id}'"}), 404
+        image = Image.open(filepath)
         image_array = iap.img_to_numpy_array(image)
 
         processed_image_array = PREPROCESSING_TECHNIQUES[technique](image_array)
@@ -89,6 +118,7 @@ def upload_image():
         return send_file(img_io, mimetype='image/jpeg')
     except Exception as e:
         return jsonify({"error": f"Failed to process the image: {str(e)}"}), 500
+
 
 @app.route('/', methods=['GET'])
 def home():
