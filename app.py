@@ -18,6 +18,21 @@ os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 PREPROCESSING_TECHNIQUES = {
     "random_crop": iap.random_crop,
     "convert_to_grey": iap.convert_to_grey,
+    "adjust_contrast": iap.adjust_contrast,
+    "adjust_hue": iap.adjust_hue,
+    "adjust_brightness": iap.adjust_brightness,
+    "square_rotate": iap.square_rotate,
+    "mirror_image": iap.mirror_image,
+    "random_rotate": iap.random_rotate,
+    "remove_background": iap.removeBackground,
+    "histogram_equalisation": iap.histogramEqualisation,
+    "normalise": iap.normalise,
+    "zero_mean_one_var": iap.zeroMeanOneVar,
+    "min_max_scaling": iap.minMaxScaling,
+    "mean_normalisation": iap.meanNormalisation,
+    "crop": iap.crop,
+    "resize": iap.resize,
+    "region_grow": iap.region_grow,
 }
 
 @app.route('/', methods=['GET'])
