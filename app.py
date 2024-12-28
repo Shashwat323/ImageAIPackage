@@ -4,12 +4,17 @@ from io import BytesIO
 
 import torch
 from flask import Flask, request, jsonify, send_file
+from ray import tune
+
 import imageaipackage as iap
 from PIL import Image
 import os
 import pickle
 import adjustibleresnet as resnet
 import json
+
+from hyperparameteroptimizer import CIFAR10Trainer
+
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER']='api-uploads'
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
@@ -74,24 +79,21 @@ def predict_image():
     except Exception as e:
         return jsonify({"error": f"Failed to load the model: {str(e)}"}), 500
 
-
-
-
 # Flask route for image upload and preprocessing
-@app.route('/upload-image', methods=['POST'])
-def upload_image():
+@app.route('/upload-file', methods=['POST'])
+def upload_file():
     # Check if the request has a file
-    if 'image' not in request.files:
-        return jsonify({"error": "No image uploaded"}), 400
+    if 'file' not in request.files:
+        return jsonify({"error": "No file uploaded"}), 400
 
-    image_file = request.files['image']
-    if not image_file:
-        return jsonify({"error": "Invalid image file"}), 400
+    file = request.files['image']
+    if not file:
+        return jsonify({"error": "Invalid file"}), 400
     unique_id = str(uuid.uuid4())
-    filename = f"{unique_id}_{image_file.filename}"
+    filename = f"{unique_id}_{file.filename}"
     filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-    image_file.save(filepath)
-    return jsonify({'message': 'Image file uploaded', 'image_id': unique_id})
+    file.save(filepath)
+    return jsonify({'message': 'File uploaded', 'file_id': unique_id})
 
 @app.route('/preprocess-image', methods=['POST'])
 def preprocess_image():
@@ -134,6 +136,58 @@ def preprocess_image():
     except Exception as e:
         return jsonify({"error": f"Failed to process the image: {str(e)}"}), 500
 
+@app.route('/hyperparameter-tuning', methods=['POST'])
+def hyperparameter_optimiser():
+    """
+        API endpoint to perform hyperparameter optimization using CIFAR10Trainer class.
+        """
+    try:
+        # Parse configuration settings from the JSON payload
+        data = request.json
+        if not data:
+            return jsonify({"error": "No configuration provided"}), 400
+
+        # Extract parameters or use defaults if not provided
+        root = data.get("root", "D:\\Other\\Repos\\ImageAIPackage")
+        batch_size = data.get("batch_size", 64)
+        fraction = data.get("fraction", 1.0)
+        num_samples = data.get("num_samples", 100)
+        iterations = data.get("iterations", 5)
+        use_progress_bar = data.get("use_progress_bar", True)
+
+        # Initialize the trainer with the provided configurations
+        trainer = CIFAR10Trainer(
+            root=root,
+            batch_size=batch_size,
+            fraction=fraction,
+            use_progress_bar=use_progress_bar
+        )
+
+        # Define search space for tuning (can come from the request or use a default)
+        search_space = data.get("search_space", {
+            "initial_out": tune.randint(32, 128),
+            "dropout": tune.uniform(0.2, 0.5),
+            "augmentations": tune.randint(5, 20),
+            "lr": tune.loguniform(1e-5, 1e-2),
+        })
+
+        # Start hyperparameter tuning
+        results = trainer.tune_model(
+            num_samples=num_samples,
+            iterations=iterations,
+            search_space=search_space
+        )
+
+        # Fetch the best configuration
+        best_config = results.get_best_result().config
+        return jsonify({
+            "message": "Hyperparameter tuning completed successfully",
+            "best_config": best_config
+        })
+
+    except Exception as e:
+        # Catch errors and return an appropriate message
+        return jsonify({"error": f"Failed to perform hyperparameter tuning: {str(e)}"}), 500
 
 @app.route('/', methods=['GET'])
 def home():

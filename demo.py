@@ -37,5 +37,5 @@ def test_and_show(img_dir, weight_dir, to_tensor, model="default", label_transfo
 
 
 if __name__ == "__main__":
-    test_and_show("unit_test_images/horse.jpg", 'D:\\Other\\Repos\\ImageAIPackage\\weights\\20241205_135518_cifar10.pt',
-                  model="cifar10_simple_cnn", to_tensor=loader.tensor, label_transform=loader.cifar_index_to_label)
+    test_and_show("unit_test_images/one.png", 'D:\\Other\\Repos\\ImageAIPackage\\weights\\20241205_131821_number.pt',
+                  model="number_simple_cnn", to_tensor=loader.number_tensor, label_transform=None)
