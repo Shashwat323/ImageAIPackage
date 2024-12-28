@@ -1,0 +1,30 @@
+{
+  "root": "D:\\Other\\Repos\\ImageAIPackage",
+  "batch_size": 32,
+  "fraction": 0.8,
+  "num_samples": 50,
+  "iterations": 3,
+  "use_progress_bar": true,
+  "search_space": {
+    "initial_out": {
+      "type": "int",
+      "min": 32,
+      "max": 128
+    },
+    "dropout": {
+      "type": "float",
+      "min": 0.2,
+      "max": 0.5
+    },
+    "augmentations": {
+      "type": "int",
+      "min": 5,
+      "max": 15
+    },
+    "lr": {
+      "type": "loguniform",
+      "min": 1e-5,
+      "max": 1e-2
+    }
+  }
+}
