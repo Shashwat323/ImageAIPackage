@@ -8,61 +8,123 @@ import adjustibleresnet
 import loader
 import torch.nn as nn
 
-root = "D:\\Other\\Repos\\ImageAIPackage"
-batch_size = 64
-fraction = 1.0
-use_progress_bar = True
+class CIFAR10Trainer:
+    """
+    A trainer for the CIFAR-10 dataset using adjustable ResNet and hyperparameter tuning.
+    """
 
-def objective(config):  # ①
-    device = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
-    train_loader, test_loader, val_loader = loader.get_dataloaders(batch_size=batch_size, root=root,
-                                                       dataset_type="cifar10", augmentations=config["augmentations"],
-                                                                   fraction=fraction)  # Load some data
-    model = adjustibleresnet.ResNet50(image_channels=3, num_classes=10, dropout=config["dropout"],
-                                      initial_out=config["initial_out"])
-    model.to(device)
-    for param in model.parameters():
-        param.requires_grad = True
-    optimizer = torch.optim.Adam(model.parameters(), lr=config["lr"])
-    loss_fn = nn.CrossEntropyLoss()
-    while True:
-        run.train(train_loader, model, loss_fn, optimizer, use_progress_bar=use_progress_bar)  # Train the model
-        acc = run.test(test_loader, model, loss_fn)  # Compute test accuracy
-        train.report({"mean_loss": acc})  # Report to Tune
+    def __init__(self, root="D:\\Other\\Repos\\ImageAIPackage", batch_size=64, fraction=1.0, use_progress_bar=True):
+        """
+        Initialize the trainer with default or user-provided configurations.
+        """
+        self.root = root
+        self.batch_size = batch_size
+        self.fraction = fraction
+        self.use_progress_bar = use_progress_bar
 
+    def get_device(self):
+        """
+        Detect the appropriate device (GPU or CPU) for training.
+        """
+        return (
+            "cuda" if torch.cuda.is_available()
+            else "mps" if torch.backends.mps.is_available()
+            else "cpu"
+        )
+
+    def objective(self, config):
+        """
+        Objective function for training and optimizing the model. This function will be called by Tune.
+        """
+        device = self.get_device()
+        train_loader, test_loader, val_loader = loader.get_dataloaders(
+            batch_size=self.batch_size,
+            root=self.root,
+            dataset_type="cifar10",
+            augmentations=config["augmentations"],
+            fraction=self.fraction
+        )
+        model = adjustibleresnet.ResNet50(
+            image_channels=3, num_classes=10,
+            dropout=config["dropout"], initial_out=config["initial_out"]
+        )
+        model.to(device)
+        for param in model.parameters():
+            param.requires_grad = True
+        optimizer = torch.optim.Adam(model.parameters(), lr=config["lr"])
+        loss_fn = nn.CrossEntropyLoss()
+
+        while True:
+            # Training phase
+            run.train(train_loader, model, loss_fn, optimizer, use_progress_bar=self.use_progress_bar)
+
+            # Validation/Test phase
+            acc = run.test(test_loader, model, loss_fn)
+
+            # Report to the tuning framework
+            train.report({"mean_loss": acc})
+
+    def tune_model(self, num_samples=100, iterations=5, search_space=None):
+        """
+        Tune the model using Ray Tune with the given hyperparameter search space.
+        """
+        if search_space is None:
+            search_space = {
+                "initial_out": tune.randint(32, 128),
+                "dropout": tune.uniform(0.2, 0.5),
+                "augmentations": tune.randint(5, 20),
+                "lr": tune.loguniform(1e-5, 1e-2),
+            }
+
+        algo = OptunaSearch(space=search_space)
+
+        trainable_with_gpu = tune.with_resources(self.objective, {"gpu": 1})
+
+        tuner = tune.Tuner(
+            trainable_with_gpu,
+            tune_config=tune.TuneConfig(
+                metric="mean_loss",
+                mode="min",
+                search_alg=algo,
+                num_samples=num_samples,
+            ),
+            run_config=train.RunConfig(stop={"training_iteration": iterations}),
+            param_space=search_space,
+        )
+
+        results = tuner.fit()
+        return results
+
+
+def main():
+    # Parse arguments for user customization
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--root', type=str, default="D:\\Other\\Repos\\ImageAIPackage",
+                        help='Root directory (where ImageAIPackage is located)')
+    parser.add_argument('--batch_size', type=int, default=64, help='Batch size for loading data')
+    parser.add_argument('--fraction', type=float, default=1.0, help='Fraction of the dataset to use')
+    parser.add_argument('--use_progress_bar', type=str, default='True', help='Set to False to disable progress bar')
+    args = parser.parse_args()
+
+    # Initialize trainer with parsed arguments
+    trainer = CIFAR10Trainer(
+        root=args.root,
+        batch_size=args.batch_size,
+        fraction=args.fraction,
+        use_progress_bar=(args.use_progress_bar == 'True')
+    )
+
+    # Define the search space and start tuning
+    search_space = {
+        "initial_out": tune.randint(32, 128),
+        "dropout": tune.uniform(0.2, 0.5),
+        "augmentations": tune.randint(5, 20),
+        "lr": tune.loguniform(1e-5, 1e-2),
+    }
+
+    results = trainer.tune_model(search_space=search_space)
+    print("Best config is:", results.get_best_result().config)
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--root', type=str, default="D:\\Other\\Repos\\ImageAIPackage", help='set to root directory (where ImageAIPackage is located)')
-    parser.add_argument('--batch_size', type=int, default=64, help='set to batch size')
-    parser.add_argument('--fraction', type=float, default=1.0, help='set to fraction of dataset to use')
-    parser.add_argument('--use_progress_bar', type=str, default='True', help='set to False to disable progress bar')
-    args = parser.parse_args()
-    root = args.root
-    batch_size = args.batch_size
-    fraction = args.fraction
-    use_progress_bar = (args.use_progress_bar == 'True')
-
-    search_space = {"initial_out": tune.randint(32, 128),
-                    "dropout": tune.uniform(0.2, 0.5), "augmentations": tune.randint(5,20),
-                    "lr": tune.loguniform(1e-5, 1e-2)}
-    algo = OptunaSearch()  # ②
-
-    trainable_with_gpu = tune.with_resources(objective, {"gpu": 1})
-
-    tuner = tune.Tuner(  # ③
-        trainable_with_gpu,
-        tune_config=tune.TuneConfig(
-            metric="mean_loss",
-            mode="min",
-            search_alg=algo,
-            num_samples=100,
-        ),
-        run_config=train.RunConfig(
-            stop={"training_iteration": 5},
-        ),
-        param_space=search_space,
-    )
-    results = tuner.fit()
-    print("Best config is:", results.get_best_result().config)
+    main()
