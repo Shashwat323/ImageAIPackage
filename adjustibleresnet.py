@@ -33,7 +33,7 @@ class Block(nn.Module):
 
 
 class ResNet(nn.Module):
-    def __init__(self, block, layers, image_channels, num_classes, dropout=0.5, initial_out = 64):
+    def __init__(self, block, layers, image_channels, num_classes, dropout=0, initial_out = 64):
         super(ResNet, self).__init__()
         self.in_channels = initial_out
         self.dropout = nn.Dropout(dropout)

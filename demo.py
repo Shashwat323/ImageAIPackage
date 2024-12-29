@@ -24,7 +24,7 @@ def test_and_show(img_dir, weight_dir, to_tensor, model="default", label_transfo
     with torch.no_grad():
         pred = model(image_vit)
 
-    print(pred)
+    #print(pred)
     pred_label = torch.argmax(pred)
     if label_transform:
         pred_label = label_transform(pred_label)
@@ -32,8 +32,9 @@ def test_and_show(img_dir, weight_dir, to_tensor, model="default", label_transfo
     # plot
     plt.imshow(image)
     plt.axis("off")
-    plt.title(f"Predicted Label: {pred_label}")
+    plt.title(f"Predicted Label: {pred_label} and pred {pred}")
     plt.show()
+    return pred_label
 
 
 if __name__ == "__main__":

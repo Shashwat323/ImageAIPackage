@@ -3,13 +3,19 @@ import uuid
 from io import BytesIO
 
 import torch
+import torchvision.transforms
 from flask import Flask, request, jsonify, send_file
+from torch.cuda.nccl import unique_id
+
 import imageaipackage as iap
 from PIL import Image
 import os
 import pickle
 import adjustibleresnet as resnet
 import json
+import demo
+import loader
+
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER']='api-uploads'
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
@@ -20,46 +26,28 @@ PREPROCESSING_TECHNIQUES = {
     "convert_to_grey": iap.convert_to_grey,
 }
 
-@app.route('/', methods=['GET'])
+@app.route('/predict-image', methods=['GET'])
 def predict_image():
-    if 'model_name' not in request.files:
-        return jsonify({"error": "No model uploaded"}), 400
     if 'model_weights' not in request.files:
-        return jsonify({"error": "No model uploaded"}), 400
-    if 'image' not in request.files:
-        return jsonify({"error": "No image uploaded"}), 400
+        return jsonify({"error": "No model weights uploaded"}), 400
 
-    model_name_file = request.files['model_name']
+    model_name_file = request.form.get('model_name')
     model_weights_file = request.files['model_weights']
-    image_file = request.files['image']
+    image_path = get_file_path(request.form.get('image_id'))
 
     if not model_weights_file:
-        return jsonify({"error": "Invalid model file"}), 400
-    if not image_file:
-        return jsonify({"error": "Invalid image file"}), 400
+        return jsonify({"error": "Invalid model weights file"}), 400
     if not model_name_file:
-        return jsonify({"error": "Invalid image file"}), 400
+        return jsonify({"error": "Invalid model name file"}), 400
 
     try:
-        model_path = os.path.join("weights", model_weights_file)
-        device = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
-        model = None
-        if model_name_file == 'resnet50_cifar10':
-            model = resnet.ResNet50(3, 10).to(device)
-        model.load_state_dict(torch.load(model_path, weights_only=False))
 
-        image = Image.open(image_file)
-        image_array = iap.img_to_numpy_array(image)
-        image_tensor = torch.from_numpy(image_array)
-        prediction = model(image_tensor)
+        predicted = demo.test_and_show(image_path, model_weights_file, model="resnet50", to_tensor=loader.tensor, label_transform=loader.cifar_index_to_label)
 
-        _, predicted = torch.max(prediction.data, 1)
         return jsonify({"message": f"Prediction: {str(predicted)}"})
 
     except Exception as e:
         return jsonify({"error": f"Failed to load the model: {str(e)}"}), 500
-
-
 
 
 # Flask route for image upload and preprocessing
@@ -119,6 +107,23 @@ def preprocess_image():
     except Exception as e:
         return jsonify({"error": f"Failed to process the image: {str(e)}"}), 500
 
+def get_file_path(image_id):
+    if not image_id:
+        return jsonify({"error": "Image ID not provided"}), 400
+
+    # Find the corresponding file
+    uploaded_images = os.listdir(app.config['UPLOAD_FOLDER'])
+    filepath = next(
+        (
+            os.path.join(app.config['UPLOAD_FOLDER'], f)
+            for f in uploaded_images if f.startswith(image_id)
+        ),
+        None,
+    )
+
+    if not filepath:
+        return jsonify({"error": f"No image found with ID '{image_id}'"}), 404
+    return filepath
 
 @app.route('/', methods=['GET'])
 def home():
