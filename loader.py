@@ -40,6 +40,9 @@ augment = iap.TransformPipeline([
 ])
 
 tensor = iap.TransformPipeline([
+    iap.img_to_numpy_array,
+    iap.crop,
+    demo_resize_to,
     transforms.ToTensor(),  # Converts PIL Image or NumPy ndarray to tensor and scales to [0, 1]
     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])  # Normalize with ImageNet statistics
 ])
