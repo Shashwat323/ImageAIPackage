@@ -57,15 +57,31 @@ def predict_image():
         return jsonify({"error": "Invalid model weights file"}), 400
     if not model_name_file:
         return jsonify({"error": "Invalid model name file"}), 400
-
     try:
-
         predicted = demo.test_and_show(image_path, model_weights_file, model="resnet50", to_tensor=loader.tensor, label_transform=loader.cifar_index_to_label)
 
         return jsonify({"message": f"Prediction: {str(predicted)}"})
 
     except Exception as e:
         return jsonify({"error": f"Failed to load the model: {str(e)}"}), 500
+
+@app.route('/segment-image', methods=['GET'])
+def segment_image():
+    #if 'model_weights' not in request.files:
+        #return jsonify({"error": "No model weights uploaded"}), 400
+
+    model_weights_path = request.form.get('model_weights')
+    image_path = get_file_path(request.form.get('image_id'))
+
+    #if not model_weights_path:
+        #return jsonify({"error": "Invalid model weights file"}), 400
+    try:
+        result = demo.segment_test_and_show(image_path, model_weights_path)
+        return jsonify({"message": f"Prediction: {str(result)}"})
+
+    except Exception as e:
+        return jsonify({"error": f"Failed to load the model: {str(e)}"}), 500
+
 
 
 # Flask route for image upload and preprocessing
@@ -75,7 +91,7 @@ def upload_file():
     if 'file' not in request.files:
         return jsonify({"error": "No file uploaded"}), 400
 
-    file = request.files['image']
+    file = request.files['file']
     if not file:
         return jsonify({"error": "Invalid file"}), 400
     unique_id = str(uuid.uuid4())
