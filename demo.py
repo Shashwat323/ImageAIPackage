@@ -1,11 +1,19 @@
 from PIL import Image
 from matplotlib import pyplot as plt
-
+from ultralytics import YOLO
 import torch
+import cv2
 
 from models.models import get_model
 import loader
 
+def segment_test_and_show(img_dir, model_weights_path):
+    #return model_weights_path
+    model_onnx = YOLO(model_weights_path)
+    img = cv2.imread(img_dir)
+    results = model_onnx(img)
+    results[0].show()
+    return results
 
 def test_and_show(img_dir, weight_dir, to_tensor, model="default", label_transform=None):
     device = "cpu"
@@ -38,5 +46,6 @@ def test_and_show(img_dir, weight_dir, to_tensor, model="default", label_transfo
 
 
 if __name__ == "__main__":
-    test_and_show("unit_test_images/one.png", 'D:\\Other\\Repos\\ImageAIPackage\\weights\\20241205_131821_number.pt',
-                  model="number_simple_cnn", to_tensor=loader.number_tensor, label_transform=None)
+    #test_and_show("unit_test_images/one.png", 'D:\\Other\\Repos\\ImageAIPackage\\weights\\20241205_131821_number.pt',
+                  #model="number_simple_cnn", to_tensor=loader.number_tensor, label_transform=None)
+    segment_test_and_show("unit_test_images/TREE4.jpg", "C:\\Users\\cohen\\OneDrive\\Documents\\ImageAIPackage\\weights\\branches.pt")
