@@ -17,7 +17,7 @@ import demo
 import loader
 
 
-from hyperparameteroptimizer import CIFAR10Trainer
+import hyperparameteroptimizer
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER']='api-uploads'
@@ -156,35 +156,14 @@ def hyperparameter_optimiser():
         root = data.get("root", "D:\\Other\\Repos\\ImageAIPackage")
         batch_size = data.get("batch_size", 64)
         fraction = data.get("fraction", 1.0)
-        num_samples = data.get("num_samples", 100)
-        iterations = data.get("iterations", 5)
-        use_progress_bar = data.get("use_progress_bar", True)
-
-        # Initialize the trainer with the provided configurations
-        trainer = CIFAR10Trainer(
-            root=root,
-            batch_size=batch_size,
-            fraction=fraction,
-            use_progress_bar=use_progress_bar
-        )
-
-        # Define search space for tuning (can come from the request or use a default)
-        search_space = data.get("search_space", {
-            "initial_out": tune.randint(32, 128),
-            "dropout": tune.uniform(0.2, 0.5),
-            "augmentations": tune.randint(5, 20),
-            "lr": tune.loguniform(1e-5, 1e-2),
-        })
-
-        # Start hyperparameter tuning
-        results = trainer.tune_model(
-            num_samples=num_samples,
-            iterations=iterations,
-            search_space=search_space
-        )
+        use_progress_bar = data.get("use_progress_bar", 'True')
+        search_space = data.get("search_space", None)
+        num_samples = data.get("num_samples", 20)
+        iterations = data.get("iterations", 2)
 
         # Fetch the best configuration
-        best_config = results.get_best_result().config
+        best_config = hyperparameteroptimizer.main(root, batch_size, fraction, use_progress_bar, search_space, num_samples, iterations)
+
         return jsonify({
             "message": "Hyperparameter tuning completed successfully",
             "best_config": best_config
@@ -193,6 +172,7 @@ def hyperparameter_optimiser():
     except Exception as e:
         # Catch errors and return an appropriate message
         return jsonify({"error": f"Failed to perform hyperparameter tuning: {str(e)}"}), 500
+
 def get_file_path(image_id):
     if not image_id:
         return jsonify({"error": "Image ID not provided"}), 400
