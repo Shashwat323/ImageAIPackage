@@ -2,8 +2,8 @@
   "root": "D:\\Other\\Repos\\ImageAIPackage",
   "batch_size": 32,
   "fraction": 0.8,
-  "num_samples": 50,
-  "iterations": 3,
+  "num_samples": 20,
+  "iterations": 2,
   "use_progress_bar": true,
   "search_space": {
     "initial_out": {

@@ -8,9 +8,9 @@ import adjustibleresnet
 import loader
 import torch.nn as nn
 
-class CIFAR10Trainer:
+class Trainer:
     """
-    A trainer for the CIFAR-10 dataset using adjustable ResNet and hyperparameter tuning.
+    A trainer for a given dataset using adjustable ResNet and hyperparameter tuning.
     """
 
     def __init__(self, root="D:\\Other\\Repos\\ImageAIPackage", batch_size=64, fraction=1.0, use_progress_bar=True):
@@ -76,15 +76,13 @@ class CIFAR10Trainer:
                 "lr": tune.loguniform(1e-5, 1e-2),
             }
 
-        algo = OptunaSearch(space=search_space)
+        algo = OptunaSearch(metric="mean_loss", mode="min")
 
         trainable_with_gpu = tune.with_resources(self.objective, {"gpu": 1})
 
         tuner = tune.Tuner(
             trainable_with_gpu,
             tune_config=tune.TuneConfig(
-                metric="mean_loss",
-                mode="min",
                 search_alg=algo,
                 num_samples=num_samples,
             ),
@@ -92,11 +90,33 @@ class CIFAR10Trainer:
             param_space=search_space,
         )
 
-        results = tuner.fit()
-        return results
+        return tuner.fit()
 
 
-def main():
+def main(root, batch_size, fraction, use_progress_bar='True', search_space=None, num_samples = 20, iterations=3):
+
+    # Initialize trainer with parsed arguments
+    trainer = Trainer(
+        root=root,
+        batch_size=batch_size,
+        fraction=fraction,
+        use_progress_bar=(use_progress_bar == 'True')
+    )
+
+    # Define the search space and start tuning
+    if search_space is None:
+        search_space = {
+            "initial_out": tune.randint(32, 128),
+            "dropout": tune.uniform(0.2, 0.5),
+            "augmentations": tune.randint(5, 20),
+            "lr": tune.loguniform(1e-5, 1e-2),
+        }
+
+    results = trainer.tune_model(search_space=search_space, num_samples=num_samples, iterations=iterations)
+    return results.get_best_result(metric="mean_loss", mode="min").config
+
+
+if __name__ == "__main__":
     # Parse arguments for user customization
     parser = argparse.ArgumentParser()
     parser.add_argument('--root', type=str, default="D:\\Other\\Repos\\ImageAIPackage",
@@ -105,26 +125,4 @@ def main():
     parser.add_argument('--fraction', type=float, default=1.0, help='Fraction of the dataset to use')
     parser.add_argument('--use_progress_bar', type=str, default='True', help='Set to False to disable progress bar')
     args = parser.parse_args()
-
-    # Initialize trainer with parsed arguments
-    trainer = CIFAR10Trainer(
-        root=args.root,
-        batch_size=args.batch_size,
-        fraction=args.fraction,
-        use_progress_bar=(args.use_progress_bar == 'True')
-    )
-
-    # Define the search space and start tuning
-    search_space = {
-        "initial_out": tune.randint(32, 128),
-        "dropout": tune.uniform(0.2, 0.5),
-        "augmentations": tune.randint(5, 20),
-        "lr": tune.loguniform(1e-5, 1e-2),
-    }
-
-    results = trainer.tune_model(search_space=search_space)
-    print("Best config is:", results.get_best_result().config)
-
-
-if __name__ == "__main__":
-    main()
+    main(args.root, args.batch_size, args.fraction, args.use_progress_bar)
