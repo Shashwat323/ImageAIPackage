@@ -1,6 +1,5 @@
 from PIL import Image
 from matplotlib import pyplot as plt
-from ultralytics import YOLO
 import torch
 import cv2
 

@@ -1,11 +1,11 @@
 import os
 import uuid
 from io import BytesIO
-
+import io
 import torch
 import torchvision.transforms
 from flask import Flask, request, jsonify, send_file
-from ray import tune
+from torchvision.transforms import transforms
 
 import imageaipackage as iap
 from PIL import Image
@@ -15,7 +15,8 @@ import adjustibleresnet as resnet
 import json
 import demo
 import loader
-
+from models import SimpleUnet
+import numpy as np
 
 import hyperparameteroptimizer
 
@@ -43,6 +44,37 @@ PREPROCESSING_TECHNIQUES = {
     "resize": iap.resize,
     "region_grow": iap.region_grow,
 }
+
+#SimoleUnet Segmenter
+@app.route('/create-mask', methods=['GET'])
+def create_mask():
+    image_transform = transforms.Compose([
+        transforms.Resize((256, 256)),
+        transforms.ToTensor(),
+    ])
+    image_path = get_file_path(request.form.get('image_id'))
+
+    img = Image.open(image_path).convert("RGB")
+    model_path = get_file_path(request.form.get('model_id'))
+
+    transformed_img = image_transform(img).unsqueeze(0)
+
+    #generate mask
+    with torch.no_grad():
+        model = SimpleUnet.SimpleUNet()
+        model.load_state_dict(torch.load(model_path, map_location="cpu"))
+        predicted_mask = model(transformed_img).squeeze(0).squeeze(0).cpu().numpy()
+        binary_mask = (predicted_mask > 0.5).astype(np.uint8) * 255
+
+
+    #save image
+    mask_image = Image.fromarray(binary_mask)
+    img_io = io.BytesIO()
+    mask_image.save(img_io, format='PNG')
+    img_io.seek(0)
+
+    #send image
+    return send_file(img_io, mimetype='image/png')
 
 @app.route('/predict-image', methods=['GET'])
 def predict_image():
