@@ -1,8 +1,6 @@
 import argparse
 
 import torch
-from ray import train, tune
-from ray.tune.search.optuna import OptunaSearch
 import run
 import adjustibleresnet
 import loader
