@@ -9,11 +9,11 @@ import loader
 
 def segment_test_and_show(img_dir, model_weights_path):
     #return model_weights_path
-    model_onnx = YOLO(model_weights_path)
+    model = YOLO(model_weights_path)
     img = cv2.imread(img_dir)
-    results = model_onnx(img)
+    results = model(img)
     results[0].show()
-    return results
+    return results[0]
 
 def test_and_show(img_dir, weight_dir, to_tensor, model="default", label_transform=None):
     device = "cpu"
@@ -40,7 +40,7 @@ def test_and_show(img_dir, weight_dir, to_tensor, model="default", label_transfo
     # plot
     plt.imshow(image)
     plt.axis("off")
-    plt.title(f"Predicted Label: {pred_label} and pred {pred}")
+    plt.title(f"Predicted Label: {pred_label}")
     plt.show()
     return pred_label
 
