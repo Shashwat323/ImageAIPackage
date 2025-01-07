@@ -46,19 +46,12 @@ PREPROCESSING_TECHNIQUES = {
 
 @app.route('/predict-image', methods=['GET'])
 def predict_image():
-    if 'model_weights' not in request.files:
-        return jsonify({"error": "No model weights uploaded"}), 400
-
-    model_name_file = request.form.get('model_name')
-    model_weights_file = request.files['model_weights']
+    model_name = request.form.get('model_name')
+    model_path = get_file_path(request.form.get('model_id'))
     image_path = get_file_path(request.form.get('image_id'))
 
-    if not model_weights_file:
-        return jsonify({"error": "Invalid model weights file"}), 400
-    if not model_name_file:
-        return jsonify({"error": "Invalid model name file"}), 400
     try:
-        predicted = demo.test_and_show(image_path, model_weights_file, model="resnet50", to_tensor=loader.tensor, label_transform=loader.cifar_index_to_label)
+        predicted = demo.test_and_show(image_path, model_path, model=model_name, to_tensor=loader.tensor, label_transform=loader.cifar_index_to_label)
 
         return jsonify({"message": f"Prediction: {str(predicted)}"})
 
@@ -67,16 +60,13 @@ def predict_image():
 
 @app.route('/segment-image', methods=['GET'])
 def segment_image():
-    #if 'model_weights' not in request.files:
-        #return jsonify({"error": "No model weights uploaded"}), 400
 
-    model_weights_path = request.form.get('model_weights')
+    model_weights_path = get_file_path(request.form.get('model_id'))
     image_path = get_file_path(request.form.get('image_id'))
 
-    #if not model_weights_path:
-        #return jsonify({"error": "Invalid model weights file"}), 400
     try:
         result = demo.segment_test_and_show(image_path, model_weights_path)
+        #return result
         return jsonify({"message": f"Prediction: {str(result)}"})
 
     except Exception as e:
