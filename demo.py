@@ -2,6 +2,7 @@ from PIL import Image
 from matplotlib import pyplot as plt
 import torch
 import cv2
+from ultralytics import YOLO
 
 from models.models import get_model
 import loader
