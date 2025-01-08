@@ -1,11 +1,11 @@
 import os
 import uuid
 from io import BytesIO
-
+import io
 import torch
 import torchvision.transforms
 from flask import Flask, request, jsonify, send_file
-from ray import tune
+from torchvision.transforms import transforms
 
 import imageaipackage as iap
 from PIL import Image
@@ -15,7 +15,8 @@ import adjustibleresnet as resnet
 import json
 import demo
 import loader
-
+from models import SimpleUnet
+import numpy as np
 
 import hyperparameteroptimizer
 
@@ -44,21 +45,45 @@ PREPROCESSING_TECHNIQUES = {
     "region_grow": iap.region_grow,
 }
 
-@app.route('/predict-image', methods=['GET'])
-def predict_image():
-    if 'model_weights' not in request.files:
-        return jsonify({"error": "No model weights uploaded"}), 400
-
-    model_name_file = request.form.get('model_name')
-    model_weights_file = request.files['model_weights']
+#SimoleUnet Segmenter
+@app.route('/create-mask', methods=['GET'])
+def create_mask():
+    image_transform = transforms.Compose([
+        transforms.Resize((256, 256)),
+        transforms.ToTensor(),
+    ])
     image_path = get_file_path(request.form.get('image_id'))
 
-    if not model_weights_file:
-        return jsonify({"error": "Invalid model weights file"}), 400
-    if not model_name_file:
-        return jsonify({"error": "Invalid model name file"}), 400
+    img = Image.open(image_path).convert("RGB")
+    model_path = get_file_path(request.form.get('model_id'))
+
+    transformed_img = image_transform(img).unsqueeze(0)
+
+    #generate mask
+    with torch.no_grad():
+        model = SimpleUnet.SimpleUNet()
+        model.load_state_dict(torch.load(model_path, map_location="cpu"))
+        predicted_mask = model(transformed_img).squeeze(0).squeeze(0).cpu().numpy()
+        binary_mask = (predicted_mask > 0.5).astype(np.uint8) * 255
+
+
+    #save image
+    mask_image = Image.fromarray(binary_mask)
+    img_io = io.BytesIO()
+    mask_image.save(img_io, format='PNG')
+    img_io.seek(0)
+
+    #send image
+    return send_file(img_io, mimetype='image/png')
+
+@app.route('/predict-image', methods=['GET'])
+def predict_image():
+    model_name = request.form.get('model_name')
+    model_path = get_file_path(request.form.get('model_id'))
+    image_path = get_file_path(request.form.get('image_id'))
+
     try:
-        predicted = demo.test_and_show(image_path, model_weights_file, model="resnet50", to_tensor=loader.tensor, label_transform=loader.cifar_index_to_label)
+        predicted = demo.test_and_show(image_path, model_path, model=model_name, to_tensor=loader.tensor, label_transform=loader.cifar_index_to_label)
 
         return jsonify({"message": f"Prediction: {str(predicted)}"})
 
@@ -67,16 +92,13 @@ def predict_image():
 
 @app.route('/segment-image', methods=['GET'])
 def segment_image():
-    #if 'model_weights' not in request.files:
-        #return jsonify({"error": "No model weights uploaded"}), 400
 
-    model_weights_path = request.form.get('model_weights')
+    model_weights_path = get_file_path(request.form.get('model_id'))
     image_path = get_file_path(request.form.get('image_id'))
 
-    #if not model_weights_path:
-        #return jsonify({"error": "Invalid model weights file"}), 400
     try:
         result = demo.segment_test_and_show(image_path, model_weights_path)
+        #return result
         return jsonify({"message": f"Prediction: {str(result)}"})
 
     except Exception as e:

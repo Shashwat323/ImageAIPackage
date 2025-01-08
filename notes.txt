@@ -1,0 +1,3 @@
+the hugging face - online deep learning package (conda install)
+wandb - Online training process recording system
+overleaf.com (LaTeX)
