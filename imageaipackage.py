@@ -3,7 +3,6 @@ import cv2
 import itertools
 import numpy as np
 import random
-import rembg
 from typing import Callable, List, Union
 from PIL import Image, ImageOps, ImageEnhance
 import onnxruntime
