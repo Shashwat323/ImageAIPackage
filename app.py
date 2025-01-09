@@ -3,6 +3,12 @@ from io import BytesIO
 import io
 import torch
 from flask import Flask, request, jsonify, send_file
+from ray import tune
+import tensorflow.keras.datasets as datasets
+from tensorflow.keras.utils import to_categorical
+from tensorflow.keras.callbacks import EarlyStopping
+from tensorflow.keras.models import load_model
+from sklearn.metrics import accuracy_score
 from torchvision.transforms import transforms
 
 import imageaipackage as iap
@@ -10,6 +16,7 @@ from PIL import Image
 import os
 import demo
 import loader
+import models.CNNmodels as cnn
 from models import SimpleUnet
 import numpy as np
 
@@ -158,6 +165,115 @@ def preprocess_image():
     except Exception as e:
         return jsonify({"error": f"Failed to process the image: {str(e)}"}), 500
 
+@app.route('/cnn-training',methods=['POST'])
+def trainModel():
+    datasets = ["numbers","fashion_mnist", "cifar10"]
+    models = ["leNet5", "alexNet", "vgg16C", "vgg16", "vgg19"]
+    dataset = request.form.get("dataset")
+    cnn_model = request.form.get("cnn_model")
+    model_name = request.form.get("model_name")
+    epo = request.form.get("epoch")
+    bat = request.form.get("batch")
+    if dataset not in datasets:
+        return jsonify({"error": "UNDEFINED DATASET\nSupported datasets are the fashion dataset (fashion_mnist), CIFAR10 (cifar10) and the mnist numbers dataset (nubers)"}), 400
+    if cnn_model not in models:
+        return jsonify({"error": "UNDEFINED CNN_MODEL\nThe supported models are LeNet-5 (leNet5), AlexNet (alexNet), VGG-16 Configuration C (vgg16C), VGG-16 Configuration D (vgg16) and VGG-19 (vgg19)"}), 400
+    try:
+        epoch = int(epo)
+    except Exception as e:
+        epoch = 100
+    try:
+        batch = int(bat)
+    except Exception as e:
+        batch = 2048
+    
+    try:
+        # Load dataset
+        match dataset:
+            case "numbers":
+                (X_train,y_train),(X_test,y_test) = datasets.mnist.load_data()
+                class_count = 10
+            case "fashion_mnist":
+                (X_train,y_train),(X_test,y_test) = datasets.fashion_mnist.load_data()
+                class_count = 10
+            case "cifar10":
+                (X_train,y_train),(X_test,y_test) = datasets.cifar10.load_data()
+                class_count = 10
+            case _:
+                print("UNDEFINED DATASET\nSupported datasets are the fashion dataset (fashion_mnist), CIFAR10 (cifar10) and the mnist numbers dataset (nubers).")
+                return
+
+        # Dataset to categorical
+        y_train_cat = to_categorical(y_train, num_classes=class_count)
+        y_test_cat = to_categorical(y_test, num_classes=class_count)
+
+        if(cnn_model == "leNet5"):
+            # Normalise data
+            X_train_norm = X_train / 255
+            X_test_norm = X_test / 255
+            # Reshape data
+            X_train_norm = X_train_norm.reshape(X_train_norm.shape[0], X_train_norm.shape[1], X_train_norm.shape[2], 1)
+            X_test_norm = X_test_norm.reshape(X_test_norm.shape[0], X_test_norm.shape[1], X_test_norm.shape[2], 1)
+        else:
+            # Reshape data
+            X_train_norm = X_train_norm.reshape(X_train_norm.shape[0], X_train_norm.shape[1], X_train_norm.shape[2], 3)
+            X_test_norm = X_test_norm.reshape(X_test_norm.shape[0], X_test_norm.shape[1], X_test_norm.shape[2], 3)
+
+        # Select model
+        match cnn_model:
+            case "leNet5":
+                model = cnn.leNet5(class_count)
+            case "alexNet":
+                model = cnn.alexNet(class_count)
+            case "vgg16C":
+                model = cnn.vgg16C(class_count)
+            case "vgg16":
+                model = cnn.vgg16(class_count)
+            case "vgg19":
+                model = cnn.vgg19(class_count)
+            case _:
+                print("UNDEFINED CNN_MODEL\nThe supported models are LeNet-5 (leNet5), AlexNet (alexNet), VGG-16 Configuration C (vgg16C), VGG-16 Configuration D (vgg16) and VGG-19 (vgg19)")
+                return
+
+        # Compile model
+        model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+
+        # Define callback
+        callback = [EarlyStopping(monitor='val_loss', patience=10)]
+
+        # Fit the model
+        model.fit(x=X_train_norm, y=y_train_cat, validation_data=(X_test_norm,y_test_cat), epochs=epoch, batch_size=batch, callbacks=callback)
+
+        # Save model
+        filename = model_name + ".keras"
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        model.save(filepath)
+
+        # Get last accuracy scores
+        batch_size = 1024
+        y_pred_train = to_categorical(model.predict(X_train_norm,batch_size=batch_size).argmax(axis=1), num_classes=10)
+        y_pred_test = to_categorical(model.predict(X_test_norm,batch_size=batch_size).argmax(axis=1), num_classes=10)
+        return jsonify({
+            "message": f"Training Accuracy:{accuracy_score(y_pred_train, y_train_cat)}\nTesting Accuracy:{accuracy_score(y_pred_test, y_test_cat)}"
+        })
+    except Exception as e:
+        return jsonify({"error": "Failed to train model"}), 400
+
+@app.route('/predict-model',methods=['GET'])
+def predictImage():
+    model_name = request.form.get("model_name")
+    image = request.form.get("image")
+    if(".keras" not in model_name):
+        model_name += ".keras"
+    filepath = os.path.join(app.config['UPLOAD_FOLDER'], model_name)
+    try:
+        # Load model
+        model = load_model(filepath)
+        return jsonify({"message": f"Predicted class:{to_categorical(model.predict(image))}"})
+    except Exception as e:
+        return jsonify({"error": "Failed to load model or to predict class"}), 400
+
+
 @app.route('/hyperparameter-tuning', methods=['POST'])
 def hyperparameter_optimiser():
     """
@@ -207,6 +323,7 @@ def get_file_path(image_id):
     if not filepath:
         return jsonify({"error": f"No image found with ID '{image_id}'"}), 404
     return filepath
+
 
 @app.route('/', methods=['GET'])
 def home():
