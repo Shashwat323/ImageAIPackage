@@ -3,6 +3,7 @@
 import torch
 import torchvision
 import torchvision.transforms as transforms
+from torch import optim
 
 import run
 from models import resnet
